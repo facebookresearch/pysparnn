@@ -2,58 +2,68 @@
 # All rights reserved.
 #
 # This source code is licensed under the BSD-style license found in the
-# LICENSE file in the root directory of this source tree. An additional grant 
+# LICENSE file in the root directory of this source tree. An additional grant
 # of patent rights can be found in the PATENTS file in the same directory.
+"""Defines a search structure for doing sparse K-NN Queries"""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+import abc
 import collections
 import math
-import numpy as np
 import random
+import numpy as np
 import scipy.sparse
 
-def k_best(l, k, similarity): 
+def k_best(tuple_list, k, similarity):
     """Get the k-best tuples by similarity.
     Args:
-        l: List of tuples.
+        tuple_list: List of tuples. (similarity, value)
         k: Number of tuples to return.
         similarity: Boolean value indicating if similarity values should be
             returned.
     Returns:
         The K-best tuples (similarity, value) by similarity score.
     """
-    l = sorted(l, key=lambda x: x[0], reverse=True)[:k]
+    tuple_lst = sorted(tuple_list, key=lambda x: x[0], reverse=True)[:k]
     if similarity:
-        return l
+        return tuple_lst
     else:
-        return [x[1] for x in l]
+        return [x[1] for x in tuple_lst]
 
 class MatrixCluster(object):
     """A sparse matrix representation out of features."""
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self, records_features, records_data):
         """
-        Args: 
-            records_features: List of features in the format of 
+        Args:
+            records_features: List of features in the format of
                {feature_name1 -> value1, feature_name2->value2, ...}.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to records_features.
         """
         self.dimension = {}
         self.inverse_dimension = {}
-        self.matrix = self._create_matrix(records_features, 
-                expand_dimension=True)
+        self.matrix = self._create_matrix(records_features,
+                                          expand_dimension=True)
         self.records_features = np.array(records_features)
         self.records_data = np.array(records_data)
 
+    @abc.abstractmethod
+    def _transform_value(self, val):
+        return
+
+    @abc.abstractmethod
+    def _similarity(self, a_matrix):
+        return
 
     def _create_matrix(self, records_features, expand_dimension=False):
         """Create a sparse matrix out of a set of features.
-        Args: 
-            records_features: List of features in the format of 
+        Args:
+            records_features: List of features in the format of
                {feature_name1 -> value1, feature_name2->value2, ...}.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to records_features.
@@ -63,13 +73,13 @@ class MatrixCluster(object):
         indptr = [0]
         indices = []
         data = []
-        # could force records_features to be a list of (int, float) instead of 
+        # could force records_features to be a list of (int, float) instead of
         #  ageneric dict (that can take strings)
         for features in records_features:
             for feature, value in features.iteritems():
                 if expand_dimension or feature in self.dimension:
-                    index = self.dimension.setdefault(feature, 
-                            len(self.dimension))
+                    index = self.dimension.setdefault(feature,
+                                                      len(self.dimension))
                     self.inverse_dimension[index] = feature
                     indices.append(index)
                     data.append(self._transform_value(value))
@@ -77,13 +87,12 @@ class MatrixCluster(object):
 
         shape = (len(records_features), len(self.dimension))
         return scipy.sparse.csr_matrix((data, indices, indptr), dtype=float,
-            shape=shape)    
-    
+                                       shape=shape)
 
-    def nearest_search(self, features, k=1, threshold=0.0):
-        """Find the closest item(s) for each feature_list in  
+    def nearest_search(self, features_list, k=1, threshold=0.0):
+        """Find the closest item(s) for each set of features in features_list.
 
-        Args: 
+        Args:
             features_list: A list where each element is a list of features
                 to query.
             k: Return the k closest results.
@@ -91,80 +100,55 @@ class MatrixCluster(object):
 
         Returns:
             For each element in features_list, return the k-nearest items
-            and their similarity clores 
-            [[(score1_1, item1_1), ..., (score1_k, item1_k)], 
+            and their similarity scores
+            [[(score1_1, item1_1), ..., (score1_k, item1_k)],
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
         """
-        a = self._create_matrix(features)
-        sim_matrix = self._similarity(a).toarray()
+        a_matrix = self._create_matrix(features_list)
+        sim_matrix = self._similarity(a_matrix).toarray()
         sim_filter = sim_matrix >= threshold
 
         ret = []
         for i in range(sim_matrix.shape[0]):
             # these arrays are the length of the sqrt(index)
             # replacing the for loop by matrix ops could speed things up
-            
+
             index = sim_filter[i]
             scores = sim_matrix[i][index]
             records = self.records_data[index]
             arg_index = np.argsort(scores)[-k:]
-            
+
             curr_ret = zip(scores[arg_index], records[arg_index])
-            
+
             ret.append(curr_ret)
-        
-        return ret    
-        
-#class UnitVecCosineMatrixCluster(MatrixCluster):
-#    def __init__(self, records_features, records_data):
-#        super(UnitVecCosineMatrixCluster, self).__init__(records_features, 
-#                records_data)
-#        
-#        # we inforce 1 hot encodeing. this means that all our values are
-#        # 0 or 1
-#        # since 1^2 == 1, we can do a sum shortcut instad of sum of squares
-#        # this is much faster and more memory efficent
-#        self.matrix_root_sum_square = \
-#                np.sqrt(np.asarray(self.matrix.sum(axis=1)).reshape(-1))
-#    
-#    def _transform_value(self, v):
-#        return 1
-#    
-#    def _similarity(self, a):
-#        """Vectorised cosine similarity"""
-#        dprod = a.dot(self.matrix.transpose()) * 1.0
-#
-#        a_root_sum_square = np.asarray(a.sum(axis=1)).reshape(-1)
-#        a_root_sum_square = a_root_sum_square.reshape(len(a_root_sum_square), 1)
-#        a_root_sum_square = np.sqrt(a_root_sum_square)
-#        
-#        magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
-#
-#        return dprod.multiply(magnitude)
+
+        return ret
 
 class CosineSimilarity(MatrixCluster):
+    """A matrix that implements cosine similarity search against it."""
+
     def __init__(self, records_features, records_data):
         super(CosineSimilarity, self).__init__(records_features, records_data)
-        
+
         m_c = self.matrix.copy()
         m_c.data **= 2
         self.matrix_root_sum_square = \
                 np.sqrt(np.asarray(m_c.sum(axis=1)).reshape(-1))
-    
+
     def _transform_value(self, v):
         return v
-    
-    def _similarity(self, a):
-        """Vectorised cosine similarity"""
-        dprod = a.dot(self.matrix.transpose()) * 1.0
 
-        a_c = a.copy()
+    def _similarity(self, a_matrix):
+        """Vectorised cosine similarity"""
+        dprod = a_matrix.dot(self.matrix.transpose()) * 1.0
+
+        a_c = a_matrix.copy()
         a_c.data **= 2
         a_root_sum_square = np.asarray(a_c.sum(axis=1)).reshape(-1)
         a_root_sum_square = \
                 a_root_sum_square.reshape(len(a_root_sum_square), 1)
         a_root_sum_square = np.sqrt(a_root_sum_square)
-        
+
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 
         return dprod.multiply(magnitude)
@@ -186,13 +170,13 @@ class ClusterIndex(object):
             This breaks up one O(K) search into two O(sqrt(K)) searches which
             is much much faster when K is big.
     """
-    def __init__(self, records_features, records_data, 
-            similarity_type=CosineSimilarity):
-        """Create a search index composed of recursively defined sparse 
+    def __init__(self, records_features, records_data,
+                 similarity_type=CosineSimilarity):
+        """Create a search index composed of recursively defined sparse
         matricies.
 
-        Args: 
-            records_features: List of features in the format of 
+        Args:
+            records_features: List of features in the format of
                {feature_name1 -> value1, feature_name2->value2, ...}.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to records_features.
@@ -206,11 +190,11 @@ class ClusterIndex(object):
         # keeping to a single layer for simplicity/accuracy
         num_clusters = int(math.sqrt(len(self.records_features)))
         clusters_selection = random.sample(self.records_features, num_clusters)
-        
+
         item_to_clusters = collections.defaultdict(list)
 
         root = similarity_type(clusters_selection,
-                list(range(len(clusters_selection))))
+                               list(range(len(clusters_selection))))
 
         rng_step = 10000
         for rng in range(0, len(records_features), rng_step):
@@ -221,27 +205,23 @@ class ClusterIndex(object):
 
         self.clusters = []
         cluster_keeps = []
-        for k in range(len(clusters_selection)):
-            v = item_to_clusters[k]
-            if len(v) > 0:
-                mtx = similarity_type(self.records_features[v], 
-                        self.records_data[v])
+        for k, clust_sel in enumerate(clusters_selection):
+            clustr = item_to_clusters[k]
+            if len(clustr) > 0:
+                mtx = similarity_type(self.records_features[clustr],
+                                      self.records_data[clustr])
                 self.clusters.append(mtx)
-                cluster_keeps.append(clusters_selection[k])
+                cluster_keeps.append(clust_sel)
 
         self.root = similarity_type(cluster_keeps,
-                list(range(len(cluster_keeps))))
+                                    list(range(len(cluster_keeps))))
 
 
-    # TODO: I think i can save a little time by batching the searches together
-    #  or creating one huge matrix
-    # TODO: Cut down index construction time
-    # TODO: Speed comparison tests
-    def search(self, records_features, k=1, threshold=0.95, k_clusters=1, 
-            return_similarity=True):
+    def search(self, records_features, k=1, threshold=0.95, k_clusters=1,
+               return_similarity=True):
         """Find the closest item(s) for each feature_list in.
 
-        Args: 
+        Args:
             features_list: A list where each element is a list of features
                 to query.
             k: Return the k closest results.
@@ -252,8 +232,8 @@ class ClusterIndex(object):
 
         Returns:
             For each element in features_list, return the k-nearest items
-            and their similarity clores 
-            [[(score1_1, item1_1), ..., (score1_k, item1_k)], 
+            and their similarity clores
+            [[(score1_1, item1_1), ..., (score1_k, item1_k)],
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
 
              Note: if return_similarity is False then only items are returned
@@ -263,16 +243,16 @@ class ClusterIndex(object):
         # should batch requests to clusters to make this more efficent
         ret = []
         nearest = self.root.nearest_search(records_features, k=k_clusters)
-        
-        # TODO: np.array-ify - this loop can be replaced by array concats
+
         for i, nearest_clusters in enumerate(nearest):
             curr_ret = []
-            
-            for score, cluster in nearest_clusters:
-                
-                cluster_items = self.clusters[cluster].nearest_search(
-                        [records_features[i]], k=k, threshold=threshold)
-                
+
+            for _, cluster in nearest_clusters:
+
+                cluster_items = self.clusters[cluster].\
+                        nearest_search([records_features[i]], k=k,
+                                       threshold=threshold)
+
                 for elements in cluster_items:
                     if len(elements) > 0:
                         if return_similarity:
