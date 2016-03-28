@@ -8,7 +8,7 @@ PySparNN can be easily extended with abritrary similarity metrics (Manhattan, Ec
 If your data is NOT SPARSE & you don't require a custom distance function - please consider [annoy](https://github.com/spotify/annoy). 
 It uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 
-The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~30% faster on the 20newsgroups dataset. [Here is the comparison.](https://github.com/facebook/PySparNN/blob/master/sparse_search_comparison.ipynb)
+The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~25% faster on the 20newsgroups dataset. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/sparse_search_comparison.ipynb)
 
 Notes:
 * A future update may allow incremental insertions.
@@ -51,8 +51,6 @@ We randomly pick sqrt(K) items to be in the top level. Then for each of the K do
 level.
 
 This breaks up one O(K) search into two O(sqrt(K)) searches which is much much faster when K is big!
-
-PySparNN takes advantage of matrix multiplication to do comparisons. Thus searching a point against the index becomes a series of sparse matrix operations.
 
 ## Further Information
 http://nlp.stanford.edu/IR-book/html/htmledition/cluster-pruning-1.html
