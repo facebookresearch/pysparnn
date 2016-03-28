@@ -52,8 +52,6 @@ level.
 
 This breaks up one O(K) search into two O(sqrt(K)) searches which is much much faster when K is big!
 
-PySparNN takes advantage of matrix multiplication to do comparisons. Thus searching a point against the index becomes a series of sparse matrix operations.
-
 ## Further Information
 http://nlp.stanford.edu/IR-book/html/htmledition/cluster-pruning-1.html
 
