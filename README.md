@@ -1,6 +1,5 @@
 Blockers:
 * Finsih contributing file
-* pylint
 * matrix vector mulitply discussion
 
 # PySparNN
@@ -45,7 +44,7 @@ cp.search(features, threshold=0.50, k_clusters=2, k=2, return_similarity=False)
 ```
 
 ## Requirements
-PySparNN requires numpy. Tested with numpy 1.10.4.
+PySparNN requires numpy and scipy. Tested with numpy 1.10.4 and scipy 0.17.0.
 
 ## How PySparNN works
 Searching for a document in an collection of K documents is naievely O(K) (assuming documents are constant sized). 
@@ -56,6 +55,8 @@ We randomly pick sqrt(K) items to be in the top level. Then for each of the K do
 level.
 
 This breaks up one O(K) search into two O(sqrt(K)) searches which is much much faster when K is big!
+
+PySparNN takes advantage of matrix multiplication to do comparisons. Thus searching a point against the index becomes a series of sparse matrix operations.
 
 ## Further Information
 http://nlp.stanford.edu/IR-book/html/htmledition/cluster-pruning-1.html
