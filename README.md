@@ -1,7 +1,3 @@
-Blockers:
-* Finsih contributing file
-* matrix vector mulitply discussion
-
 # PySparNN
 Sparse (approximate) nearest neighbor search for python! This library is well suited to finding nearest neighbors in sparse, high dimensional spaces (like a text doccuments). 
 
