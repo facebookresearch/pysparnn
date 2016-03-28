@@ -8,7 +8,7 @@ PySparNN can be easily extended with abritrary similarity metrics (Manhattan, Ec
 If your data is NOT SPARSE & you don't require a custom distance function - please consider [annoy](https://github.com/spotify/annoy). 
 It uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 
-The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~30% faster on the 20newsgroups dataset. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/sparse_search_comparison.ipynb)
+The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~25% faster on the 20newsgroups dataset. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/sparse_search_comparison.ipynb)
 
 Notes:
 * A future update may allow incremental insertions.
