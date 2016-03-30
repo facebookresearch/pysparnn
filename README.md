@@ -47,7 +47,7 @@ Searching for a document in an collection of K documents is naievely O(K) (assum
 
 However! we can create a tree structure where the first level is O(sqrt(K)) and each of the leaves are also O(sqrt(K)) - on average.
 
-We randomly pick sqrt(K) candidate items to be in the top level. Then, each document in the full list of K documents is assigned to the closest candidate in the top level.
+We randomly pick sqrt(K) candidate items to be in the top level. Then -- each document in the full list of K documents is assigned to the closest candidate in the top level.
 
 This breaks up one O(K) search into two O(sqrt(K)) searches which is much much faster when K is big!
 
