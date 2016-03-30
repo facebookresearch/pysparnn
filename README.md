@@ -1,5 +1,5 @@
 # PySparNN
-Sparse (approximate) nearest neighbor search for python! This library is well suited to finding nearest neighbors in sparse, high dimensional spaces (like a text doccuments). 
+Sparse (approximate) nearest neighbor search for python! This library is well suited to finding nearest neighbors in sparse, high dimensional spaces (like a text documents). 
 
 Out of the box, PySparNN supports Cosine Similarity.
 
@@ -45,10 +45,9 @@ PySparNN requires numpy and scipy. Tested with numpy 1.10.4 and scipy 0.17.0.
 ## How PySparNN works
 Searching for a document in an collection of K documents is naievely O(K) (assuming documents are constant sized). 
 
-However! we can create a tree structure where the first level is O(sqrt(K)) and each of the leaves are also O(sqrt(K)).
+However! we can create a tree structure where the first level is O(sqrt(K)) and each of the leaves are also O(sqrt(K)) - on average.
 
-We randomly pick sqrt(K) items to be in the top level. Then for each of the K doccuments - assign it to the closest neighbor in the top
-level.
+We randomly pick sqrt(K) candidate items to be in the top level. Then, each document in the full list of K documents is assigned to the closest candidate in the top level.
 
 This breaks up one O(K) search into two O(sqrt(K)) searches which is much much faster when K is big!
 
