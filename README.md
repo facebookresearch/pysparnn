@@ -37,13 +37,14 @@ for sentence in data:
     features_list.append(scentence2features(sentence))
 
 # build the search index!
+cp = snn.ClusterIndex(features_list, data)
+
+# search the index
 search_items = [
     scentence2features('oh there'),
     scentence2features('Play it again Frank')
 ]
-cp = snn.ClusterIndex(features_list, data)
 
-# search the index
 cp.search(search_items, threshold=0.50, k=1, return_similarity=False)
 >> [['oh hello there'], ['Play it again Sam']]
 
