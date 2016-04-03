@@ -25,18 +25,27 @@ data = [
     'Play it again Sam',
 ]    
 
-features = [dict([(x, 1) for x in f.split()]) for f in data]
+# build a feature representation for each sentence
+def scentence2features(scentence):
+    features = dict()
+    for word in scentence.split():
+        features[word] = 1
+    return features
 
-cp = snn.ClusterIndex(features, data)
+features_list = []
+for sentence in data:
+    features_list.append(scentence2features(sentence))
 
-cp.search(features, threshold=0.50, k=1, return_similarity=False)
->> [[u'hello world'], [u'oh hello there'], [u'Play it'], [u'Play it again Sam']]
+# build the search index!
+search_items = [
+    scentence2features('oh there'),
+    scentence2features('Play it again Frank')
+]
+cp = snn.ClusterIndex(features_list, data)
 
-cp.search(features, threshold=0.50, k_clusters=2, k=2, return_similarity=False)
->> [[u'hello world'],
->> [u'oh hello there'],
->> [u'Play it', u'Play it again Sam'],
->> [u'Play it again Sam', u'Play it']]
+# search the index
+cp.search(search_items, threshold=0.50, k=1, return_similarity=False)
+>> [['oh hello there'], ['Play it again Sam']]
 
 ```
 
