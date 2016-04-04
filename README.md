@@ -16,7 +16,7 @@ Notes:
 
 ## Example Usage
 ```
-import pysparnn.cluster_pruning as cp
+import pysparnn as snn
 
 data = [
     'hello world',
@@ -37,7 +37,7 @@ for sentence in data:
     features_list.append(scentence2features(sentence))
 
 # build the search index!
-cp = cp.ClusterIndex(features_list, data)
+cp = snn.ClusterIndex(features_list, data)
 
 # search the index
 search_items = [
