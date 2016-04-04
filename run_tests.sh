@@ -1,2 +1,2 @@
 #!/bin/sh
-python -m unittest tests.test_pysparnn
+python -m unittest discover tests
