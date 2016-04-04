@@ -7,7 +7,7 @@
 """Test pysparn search"""
 
 import unittest
-import pysparnn as snn
+import pysparnn.cluster_pruning as cp
 
 class PysparnnTest(unittest.TestCase):
     """End to end tests for pysparnn"""
@@ -22,7 +22,7 @@ class PysparnnTest(unittest.TestCase):
 
         features = [dict([(x, 1) for x in f.split()]) for f in data]
 
-        cluster_index = snn.ClusterIndex(features, data)
+        cluster_index = cp.ClusterIndex(features, data)
 
         ret = cluster_index .search(features, threshold=0.50, k=1,
                                     k_clusters=1, return_similarity=False)
