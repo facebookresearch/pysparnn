@@ -16,7 +16,7 @@ import math
 import random
 import numpy as np
 import scipy.sparse
-import MatrixSimilaritySearch
+import pysparnn.matrix_similarity
 
 def k_best(tuple_list, k, similarity):
     """Get the k-best tuples by similarity.
@@ -52,7 +52,7 @@ class ClusterIndex(object):
             is much much faster when K is big.
     """
     def __init__(self, records_features, records_data,
-                 similarity_type=CosineSimilarity):
+                 similarity_type=pysparnn.matrix_similarity.CosineSimilarity):
         """Create a search index composed of recursively defined sparse
         matricies.
 
