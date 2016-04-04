@@ -10,12 +10,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import abc
 import collections
 import math
 import random
 import numpy as np
-import scipy.sparse
 import pysparnn.matrix_similarity
 
 def k_best(tuple_list, k, similarity):
