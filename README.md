@@ -5,7 +5,7 @@ Out of the box, PySparNN supports Cosine Similarity.
 
 PySparNN can be easily extended with abritrary similarity metrics (Manhattan, Eculidian, Jaccard, etc).
 
-If your data is NOT SPARSE & you don't require a custom distance function - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
+If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
 
 
