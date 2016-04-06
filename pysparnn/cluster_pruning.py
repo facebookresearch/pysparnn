@@ -16,18 +16,21 @@ import random
 import numpy as np
 import pysparnn.matrix_similarity
 
-def k_best(tuple_list, k, similarity):
+def k_best(tuple_list, k, return_metric, is_similarity):
     """Get the k-best tuples by similarity.
     Args:
         tuple_list: List of tuples. (similarity, value)
         k: Number of tuples to return.
-        similarity: Boolean value indicating if similarity values should be
+        return_metric: Boolean value indicating if metric values should be
             returned.
+        is_similarity: Boolean value indicating if the metric is a similarity 
+            measure (1 meaning similar and 0 meaning different) or a distance.
     Returns:
         The K-best tuples (similarity, value) by similarity score.
     """
-    tuple_lst = sorted(tuple_list, key=lambda x: x[0], reverse=True)[:k]
-    if similarity:
+    tuple_lst = sorted(tuple_list, key=lambda x: x[0], 
+                       reverse=is_similarity)[:k]
+    if return_metric:
         return tuple_lst
     else:
         return [x[1] for x in tuple_lst]
@@ -96,18 +99,21 @@ class ClusterIndex(object):
                                     list(range(len(cluster_keeps))))
 
 
-    def search(self, records_features, k=1, threshold=0.95, k_clusters=1,
-               return_similarity=True):
+    def search(self, records_features, k=1, min_threshold=0.95, 
+               max_threshold=1.01, k_clusters=1, return_metric=True):
         """Find the closest item(s) for each feature_list in.
 
         Args:
             features_list: A list where each element is a list of features
                 to query.
             k: Return the k closest results.
-            threshold: Return items only above the threshold.
+            min_threshold: Return items only at or above the threshold.
+            max_threshold: Return items only at or below the threshold.
             k_clusters: number of clusters to search. This increases recall at
                 the cost of some speed.
-            return_similarity: Return similarity values?
+            return_metric: Return metric values? Metric can be a similarity
+                value [0, 1] where 1 indicates similar (cosine similarity). 
+                Metric can also be a distance measure (euclidean, hamming).
 
         Returns:
             For each element in features_list, return the k-nearest items
@@ -115,7 +121,7 @@ class ClusterIndex(object):
             [[(score1_1, item1_1), ..., (score1_k, item1_k)],
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
 
-             Note: if return_similarity is False then only items are returned
+             Note: if return_metric is False then only items are returned
                 and not as a tuple.
         """
         # could make this recursive at the cost of recall accuracy
@@ -130,13 +136,15 @@ class ClusterIndex(object):
 
                 cluster_items = self.clusters[cluster].\
                         nearest_search([records_features[i]], k=k,
-                                       threshold=threshold)
+                                       min_threshold=min_threshold,
+                                       max_threshold=max_threshold)
 
                 for elements in cluster_items:
                     if len(elements) > 0:
-                        if return_similarity:
+                        if return_metric:
                             curr_ret.extend(elements)
                         else:
                             curr_ret.extend(elements)
-            ret.append(k_best(curr_ret, k, return_similarity))
+            ret.append(k_best(curr_ret, k, return_metric, 
+                              self.root.is_similarity))
         return ret
