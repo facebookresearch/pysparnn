@@ -45,7 +45,7 @@ search_items = [
     scentence2features('Play it again Frank')
 ]
 
-cp.search(search_items, threshold=0.50, k=1, return_similarity=False)
+cp.search(search_items, min_threshold=0.50, k=1, return_metric=False)
 >> [['oh hello there'], ['Play it again Sam']]
 
 ```
