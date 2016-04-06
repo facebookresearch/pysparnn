@@ -9,7 +9,7 @@
 import unittest
 import pysparnn.cluster_pruning as cp
 from pysparnn.matrix_similarity import UnitCosineSimilarity
-from pysparnn.matrix_similarity import EuclideanDistance
+from pysparnn.matrix_similarity import SlowEuclideanDistance
 
 class PysparnnTest(unittest.TestCase):
     """End to end tests for pysparnn"""
@@ -58,7 +58,7 @@ class PysparnnTest(unittest.TestCase):
 
         features = [dict([(x, 1) for x in f.split()]) for f in data]
 
-        cluster_index = cp.ClusterIndex(features, data, EuclideanDistance)
+        cluster_index = cp.ClusterIndex(features, data, SlowEuclideanDistance)
 
         ret = cluster_index.search(features, min_threshold=0.0, 
                                    max_threshold=0.5, k=1, k_clusters=1, 
