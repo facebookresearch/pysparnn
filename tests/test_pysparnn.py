@@ -9,7 +9,7 @@
 import unittest
 import pysparnn.cluster_pruning as cp
 from pysparnn.matrix_similarity import SlowEuclideanDistance
-from pysparnn.matrix_similarity import UnitCosineSimilarity
+from pysparnn.matrix_similarity import UnitCosineDistance
 from sklearn.feature_extraction import DictVectorizer
 
 class PysparnnTest(unittest.TestCase):
@@ -44,7 +44,7 @@ class PysparnnTest(unittest.TestCase):
         features = [dict([(x, 1) for x in f.split()]) for f in data]
         features = DictVectorizer().fit_transform(features)
 
-        cluster_index = cp.ClusterIndex(features, data, UnitCosineSimilarity)
+        cluster_index = cp.ClusterIndex(features, data, UnitCosineDistance)
 
         ret = cluster_index.search(features, k=1, k_clusters=1, 
                                    return_metric=False)

@@ -101,8 +101,10 @@ class MatrixMetricSearch(object):
 
         return ret
 
-class CosineSimilarity(MatrixMetricSearch):
-    """A matrix that implements cosine similarity search against it.
+class CosineDistance(MatrixMetricSearch):
+    """A matrix that implements cosine distance search against it.
+
+    cosine_distance = 1 - cosine_similarity
     
     Note: We want items that are more similar to be closer to zero so we are
     going to instead return 1 - cosine_similarity. We do this so similarity
@@ -110,7 +112,7 @@ class CosineSimilarity(MatrixMetricSearch):
     """
 
     def __init__(self, sparse_features, records_data):
-        super(CosineSimilarity, self).__init__(sparse_features, records_data)
+        super(CosineDistance, self).__init__(sparse_features, records_data)
 
         m_c = self.matrix.copy()
         m_c.data **= 2
@@ -121,7 +123,7 @@ class CosineSimilarity(MatrixMetricSearch):
         return v
 
     def _similarity(self, a_matrix):
-        """Vectorised cosine similarity"""
+        """Vectorised cosine distance"""
         # what is the implmentation of transpose? can i change the order?
         dprod = a_matrix.dot(self.matrix.transpose()) * 1.0
 
@@ -137,9 +139,11 @@ class CosineSimilarity(MatrixMetricSearch):
 
         return 1 - dprod.multiply(magnitude).toarray()
 
-class UnitCosineSimilarity(MatrixMetricSearch):
+class UnitCosineDistance(MatrixMetricSearch):
     """A matrix that implements cosine similarity search against it. 
     
+    cosine_distance = 1 - cosine_similarity
+
     Note: We want items that are more similar to be closer to zero so we are
     going to instead return 1 - cosine_similarity. We do this so similarity
     and distance metrics can be treated the same way.
@@ -150,8 +154,8 @@ class UnitCosineSimilarity(MatrixMetricSearch):
     """
 
     def __init__(self, sparse_features, records_data):
-        super(UnitCosineSimilarity, self).__init__(sparse_features, 
-                                                   records_data)
+        super(UnitCosineDistance, self).__init__(sparse_features, 
+                                                 records_data)
         self.matrix_root_sum_square = \
                 np.sqrt(np.asarray(self.matrix.sum(axis=1)).reshape(-1))
 

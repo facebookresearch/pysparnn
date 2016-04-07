@@ -52,7 +52,7 @@ class ClusterIndex(object):
             is much much faster when K is big.
     """
     def __init__(self, sparse_features, records_data,
-                 similarity_type=pysparnn.matrix_similarity.CosineSimilarity):
+                 similarity_type=pysparnn.matrix_similarity.CosineDistance):
         """Create a search index composed of recursively defined sparse
         matricies.
 
