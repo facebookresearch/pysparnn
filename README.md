@@ -6,7 +6,7 @@ Out of the box, PySparNN supports Cosine Distance (i.e. 1 - cosine_similarity).
 PySparNN benefits:
  * Designed to be efficent on sparse data (memory & cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
- * Easily extended with other metrics: Manhattan, Eculidian, Jaccard, etc.
+ * Easily extended with other metrics: Manhattan, Euclidian, Jaccard, etc.
  * *Work in progress* - Min, Max distance thresholds can be set at query time (not index time). Example: return the k closest items on the interval [0.8, 0.9] from a query point. 
 
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
@@ -82,7 +82,7 @@ cp.search(search_items, k=1, k_clusters=2, return_metric=False)
 PySparNN requires numpy and scipy. Tested with numpy 1.10.4 and scipy 0.17.0.
 
 ## How PySparNN works
-Searching for a document in an collection of K documents is naievely O(K) (assuming documents are constant sized). 
+Searching for a document in an collection of K documents is naively O(K) (assuming documents are constant sized). 
 
 However! we can create a tree structure where the first level is O(sqrt(K)) and each of the leaves are also O(sqrt(K)) - on average.
 
