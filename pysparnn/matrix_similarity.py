@@ -26,6 +26,9 @@ class MatrixMetricSearch(object):
                {feature_name1 -> value1, feature_name2->value2, ...}.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to records_features.
+            is_similarity: Is the metric employed by this matrix a similarity 
+                measure [0, 1] where 1 means similar or a distance metric 
+                [0, inf] where 0 means more similar
         """
         self.is_similarity = is_similarity
         self.matrix = sparse_matrix 

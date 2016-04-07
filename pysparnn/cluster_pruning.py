@@ -63,7 +63,7 @@ class ClusterIndex(object):
                {feature_name1 -> value1, feature_name2->value2, ...}.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to records_features.
-            similarity_class: Class that defines the similarity measure to use.
+            similarity_type: Class that defines the similarity measure to use.
         """
 
         self.records_features = records_features
