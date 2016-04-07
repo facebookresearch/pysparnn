@@ -17,8 +17,9 @@ Notes:
 ## Example Usage
 ### Simple
 ```
-import numpy as np
 import pysparnn as snn
+
+import numpy as np
 from scipy.sparse import csr_matrix
 
 features = np.random.binomial(1, 0.01, size=(1000, 20000))
@@ -34,6 +35,7 @@ cp.search(features[:5], min_threshold=0.50, k=1, return_metric=False)
 ### Text
 ```
 import pysparnn as snn
+
 from sklearn.feature_extraction import DictVectorizer
 
 data = [
