@@ -15,6 +15,26 @@ Notes:
 * A future update may allow incremental insertions.
 
 ## Example Usage
+### Intro
+```
+import random
+import pysparnn as snn
+from scipy.sparse import csr_matrix
+
+features = []
+for i in xrange(1000):
+    v = [random.gauss(0, 1) for z in xrange(40)]
+    features.append(v)
+    
+features = csr_matrix(features)
+    
+# build the search index!
+cp = snn.ClusterIndex(features, range(1000))
+
+cp.search(features[:5], min_threshold=0.50, k=1, return_metric=False)
+>> [[0], [1], [2], [3], [4]]
+```
+### Text Intro
 ```
 import pysparnn as snn
 from sklearn.feature_extraction import DictVectorizer
