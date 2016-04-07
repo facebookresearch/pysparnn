@@ -8,8 +8,8 @@
 
 import unittest
 import pysparnn.cluster_pruning as cp
-from pysparnn.matrix_similarity import SlowEuclideanDistance
-from pysparnn.matrix_similarity import UnitCosineDistance
+from pysparnn.matrix_distance import SlowEuclideanDistance
+from pysparnn.matrix_distance import UnitCosineDistance
 from sklearn.feature_extraction import DictVectorizer
 
 class PysparnnTest(unittest.TestCase):

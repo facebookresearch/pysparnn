@@ -15,17 +15,17 @@ import math
 import random
 import numpy as np
 from scipy.sparse import vstack
-import pysparnn.matrix_similarity
+import pysparnn.matrix_distance
 
 def k_best(tuple_list, k, return_metric):
-    """Get the k-best tuples by similarity.
+    """Get the k-best tuples by distance.
     Args:
-        tuple_list: List of tuples. (similarity, value)
+        tuple_list: List of tuples. (distance, value)
         k: Number of tuples to return.
         return_metric: Boolean value indicating if metric values should be
             returned.
     Returns:
-        The K-best tuples (similarity, value) by similarity score.
+        The K-best tuples (distance, value) by distance score.
     """
     tuple_lst = sorted(tuple_list, key=lambda x: x[0], 
                        reverse=False)[:k]
@@ -52,7 +52,7 @@ class ClusterIndex(object):
             is much much faster when K is big.
     """
     def __init__(self, sparse_features, records_data,
-                 similarity_type=pysparnn.matrix_similarity.CosineDistance):
+                 distance_type=pysparnn.matrix_distance.CosineDistance):
         """Create a search index composed of recursively defined sparse
         matricies.
 
@@ -62,7 +62,7 @@ class ClusterIndex(object):
                 that describe a point in space for each row.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to records_features.
-            similarity_type: Class that defines the similarity measure to use.
+            distance_type: Class that defines the distance measure to use.
         """
 
         # self.sparse_features = sparse_features
@@ -77,7 +77,7 @@ class ClusterIndex(object):
 
         item_to_clusters = collections.defaultdict(list)
 
-        root = similarity_type(clusters_selection,
+        root = distance_type(clusters_selection,
                                np.arange(clusters_selection.shape[0]))
 
         rng_step = 10000
@@ -93,13 +93,13 @@ class ClusterIndex(object):
         for k, clust_sel in enumerate(clusters_selection):
             clustr = item_to_clusters[k]
             if len(clustr) > 0:
-                mtx = similarity_type(vstack(sparse_features[clustr]),
+                mtx = distance_type(vstack(sparse_features[clustr]),
                                       records_data[clustr])
                 self.clusters.append(mtx)
                 cluster_keeps.append(clust_sel)
 
         cluster_keeps = vstack(cluster_keeps)
-        self.root = similarity_type(cluster_keeps,
+        self.root = distance_type(cluster_keeps,
                                     np.arange(cluster_keeps.shape[0]))
 
 
@@ -116,13 +116,10 @@ class ClusterIndex(object):
             max_threshold: Return items only at or below the threshold.
             k_clusters: number of clusters to search. This increases recall at
                 the cost of some speed.
-            return_metric: Return metric values? Metric can be a similarity
-                value [0, 1] where 1 indicates similar (cosine similarity). 
-                Metric can also be a distance measure (euclidean, hamming).
-
+            return_metric: Return metric values? 
         Returns:
             For each element in features_list, return the k-nearest items
-            and their similarity clores
+            and (optionally) their distance
             [[(score1_1, item1_1), ..., (score1_k, item1_k)],
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
 
