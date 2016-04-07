@@ -1,5 +1,5 @@
 # PySparNN
-Sparse (approximate) nearest neighbor search for python! This library is well suited to finding nearest neighbors in sparse, high dimensional spaces (like a text documents). 
+Approximate Nearest Neighbor Search for Sparse Data in Python! This library is well suited to finding nearest neighbors in sparse, high dimensional spaces (like a text documents). 
 
 Out of the box, PySparNN supports Cosine Similarity.
 
@@ -17,6 +17,7 @@ Notes:
 ## Example Usage
 ```
 import pysparnn as snn
+from sklearn.feature_extraction import DictVectorizer
 
 data = [
     'hello world',
@@ -36,18 +37,21 @@ features_list = []
 for sentence in data:
     features_list.append(scentence2features(sentence))
 
-# build the search index!
-cp = snn.ClusterIndex(features_list, data)
+# build a sparse matrix
+dv = DictVectorizer()
+features_list = dv.fit_transform(features_list)
 
-# search the index
+# build the search index!
+cp = snn.ClusterIndex(, data)
+
+# search the index with a sparse matrix
 search_items = [
     scentence2features('oh there'),
     scentence2features('Play it again Frank')
 ]
+search_items = dv.transform(search_items)
 
-cp.search(search_items, threshold=0.50, k=1, return_similarity=False)
->> [['oh hello there'], ['Play it again Sam']]
-
+cp.search(search_items, min_threshold=0.50, k=1, k_clusters=2, return_metric=False)
 ```
 
 ## Requirements
