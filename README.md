@@ -4,7 +4,7 @@ Approximate Nearest Neighbor Search for Sparse Data in Python! This library is w
 Out of the box, PySparNN supports Cosine Distance (i.e. 1 - cosine_similarity).
 
 PySparNN benefits:
- * Designed to be efficent on sparse data (both on memory and cpu).
+ * Designed to be efficent on sparse data (memory & cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Eculidian, Jaccard, etc.
  * *Work in progress* - Min, Max similairty thresholds can be set at query time (not index time). I.e. return the k closest items on the interval [0.8, 0.9] from a query point. 
