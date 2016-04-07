@@ -17,17 +17,13 @@ Notes:
 ## Example Usage
 ### Simple
 ```
-import random
+import numpy as np
 import pysparnn as snn
 from scipy.sparse import csr_matrix
 
-features = []
-for i in xrange(1000):
-    v = [random.gauss(0, 1) for z in xrange(40)]
-    features.append(v)
-    
+features = np.random.binomial(1, 0.01, size=(1000, 20000))
 features = csr_matrix(features)
-    
+
 # build the search index!
 data_to_return = range(1000)
 cp = snn.ClusterIndex(features, data_to_return)
