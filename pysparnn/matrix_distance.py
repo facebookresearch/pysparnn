@@ -191,7 +191,7 @@ class SlowEuclideanDistance(MatrixMetricSearch):
 
     def _distance(self, a_matrix):
         """Euclidean distance"""
-        # need to handle fipping argmin k to positive
+
         return scipy.spatial.distance.cdist(
                 a_matrix.toarray(), 
                 self.matrix, 'euclidean')
