@@ -1,13 +1,13 @@
 # PySparNN
 Approximate Nearest Neighbor Search for Sparse Data in Python! This library is well suited to finding nearest neighbors in sparse, high dimensional spaces (like text documents). 
 
-Out of the box, PySparNN supports Cosine Similarity.
+Out of the box, PySparNN supports Cosine Distance (1 - cosine_similarity).
 
 PySparNN benefits:
  * Designed to be efficent on sparse data (both on memory and cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Eculidian, Jaccard, etc.
- * [work in progress] Min, Max similairty thresholds can be set at query time (not index time). I.e. return the k closest items on the interval [0.8, 0.9] from a query point. 
+ * *Work in progress* - Min, Max similairty thresholds can be set at query time (not index time). I.e. return the k closest items on the interval [0.8, 0.9] from a query point. 
 
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
@@ -17,6 +17,7 @@ The most comparable library to PySparNN is scikit-learn's LSHForrest module. As 
 
 Notes:
 * A future update may allow incremental insertions.
+* 
 
 ## Example Usage
 ### Simple Example
@@ -33,7 +34,7 @@ features = csr_matrix(features)
 data_to_return = range(1000)
 cp = snn.ClusterIndex(features, data_to_return)
 
-cp.search(features[:5], min_threshold=0.50, k=1, return_metric=False)
+cp.search(features[:5], k=1, return_metric=False)
 >> [[0], [1], [2], [3], [4]]
 ```
 ### Text Example
@@ -73,7 +74,7 @@ search_items = [
 ]
 search_items = dv.transform(search_items)
 
-cp.search(search_items, min_threshold=0.50, k=1, k_clusters=2, return_metric=False)
+cp.search(search_items, k=1, k_clusters=2, return_metric=False)
 >> [['oh hello there'], ['Play it again Sam']]
 
 ```
