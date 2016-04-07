@@ -17,20 +17,18 @@ import numpy as np
 from scipy.sparse import vstack
 import pysparnn.matrix_similarity
 
-def k_best(tuple_list, k, return_metric, is_similarity):
+def k_best(tuple_list, k, return_metric):
     """Get the k-best tuples by similarity.
     Args:
         tuple_list: List of tuples. (similarity, value)
         k: Number of tuples to return.
         return_metric: Boolean value indicating if metric values should be
             returned.
-        is_similarity: Boolean value indicating if the metric is a similarity 
-            measure (1 meaning similar and 0 meaning different) or a distance.
     Returns:
         The K-best tuples (similarity, value) by similarity score.
     """
     tuple_lst = sorted(tuple_list, key=lambda x: x[0], 
-                       reverse=is_similarity)[:k]
+                       reverse=False)[:k]
     if return_metric:
         return tuple_lst
     else:
@@ -105,8 +103,8 @@ class ClusterIndex(object):
                                     np.arange(cluster_keeps.shape[0]))
 
 
-    def search(self, sparse_features, k=1, min_threshold=0.95, 
-               max_threshold=1.01, k_clusters=1, return_metric=True):
+    def search(self, sparse_features, k=1, min_threshold=None, 
+               max_threshold=None, k_clusters=1, return_metric=True):
         """Find the closest item(s) for each feature_list in.
 
         Args:
@@ -152,6 +150,5 @@ class ClusterIndex(object):
                             curr_ret.extend(elements)
                         else:
                             curr_ret.extend(elements)
-            ret.append(k_best(curr_ret, k, return_metric, 
-                              self.root.is_similarity))
+            ret.append(k_best(curr_ret, k, return_metric))
         return ret

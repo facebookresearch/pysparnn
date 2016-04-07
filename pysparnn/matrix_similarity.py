@@ -19,7 +19,7 @@ class MatrixMetricSearch(object):
     """A sparse matrix representation out of features."""
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, sparse_features, records_data, is_similarity=True):
+    def __init__(self, sparse_features, records_data):
         """
         Args:
             sparse_features: A csr_matrix with rows that represent records 
@@ -27,20 +27,31 @@ class MatrixMetricSearch(object):
                 that describe a point in space for each row.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to sparse_features.
-            is_similarity: Is the metric employed by this matrix a similarity 
-                measure [0, 1] where 1 means similar or a distance metric 
-                [0, inf] where 0 means more similar
         """
-        self.is_similarity = is_similarity
         self.matrix = sparse_features
         self.records_data = np.array(records_data)
 
     @abc.abstractmethod
     def _transform_value(self, val):
+        """
+        Args:
+            val: A numeric value to be (potentially transformed).
+        Returns:
+            The transformed numeric value. 
+        """
         return
 
     @abc.abstractmethod
     def _similarity(self, a_matrix):
+        """
+        Args:
+            a_matrix: A csr_matrix with rows that represent records 
+                to search against. 
+            records_data: Data to return when a doc is matched. Index of
+                corresponds to sparse_features.
+        Returns: 
+            A dense array representing distance.
+        """
         return
 
     def nearest_search(self, sparse_features, k=1, min_threshold=None,
@@ -62,7 +73,7 @@ class MatrixMetricSearch(object):
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
         """
 
-        sim_matrix = self._similarity(sparse_features).toarray()
+        sim_matrix = self._similarity(sparse_features)
 
         if min_threshold == None:
             min_threshold = -1 * float("inf")
@@ -82,11 +93,7 @@ class MatrixMetricSearch(object):
             scores = sim_matrix[i][index]
             records = self.records_data[index]
 
-            arg_index = None
-            if self.is_similarity:
-                arg_index = np.argsort(scores)[-k:]
-            else:
-                arg_index = np.argsort(scores)[:k]
+            arg_index = np.argsort(scores)[:k]
 
             curr_ret = zip(scores[arg_index], records[arg_index])
 
@@ -95,7 +102,12 @@ class MatrixMetricSearch(object):
         return ret
 
 class CosineSimilarity(MatrixMetricSearch):
-    """A matrix that implements cosine similarity search against it."""
+    """A matrix that implements cosine similarity search against it.
+    
+    Note: We want items that are more similar to be closer to zero so we are
+    going to instead return 1 - cosine_similarity. We do this so similarity
+    and distance metrics can be treated the same way.
+    """
 
     def __init__(self, sparse_features, records_data):
         super(CosineSimilarity, self).__init__(sparse_features, records_data)
@@ -123,10 +135,15 @@ class CosineSimilarity(MatrixMetricSearch):
 
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 
-        return dprod.multiply(magnitude)
+        return 1 - dprod.multiply(magnitude).toarray()
 
 class UnitCosineSimilarity(MatrixMetricSearch):
     """A matrix that implements cosine similarity search against it. 
+    
+    Note: We want items that are more similar to be closer to zero so we are
+    going to instead return 1 - cosine_similarity. We do this so similarity
+    and distance metrics can be treated the same way.
+
     Assumes unit-vectors and takes some shortucts:
       * Uses integers instead of floats
       * 1**2 == 1 so that operation can be skipped
@@ -153,7 +170,7 @@ class UnitCosineSimilarity(MatrixMetricSearch):
 
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 
-        return dprod.multiply(magnitude)
+        return 1 - dprod.multiply(magnitude).toarray()
 
 class SlowEuclideanDistance(MatrixMetricSearch):
     """A matrix that implements euclidean distance search against it. 
@@ -171,6 +188,6 @@ class SlowEuclideanDistance(MatrixMetricSearch):
     def _similarity(self, a_matrix):
         """Euclidean distance"""
         # need to handle fipping argmin k to positive
-        return scipy.sparse.csr_matrix(scipy.spatial.distance.cdist(
+        return scipy.spatial.distance.cdist(
                 a_matrix.toarray(), 
-                self.matrix, 'euclidean'))
+                self.matrix, 'euclidean')
