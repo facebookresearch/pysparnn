@@ -19,19 +19,20 @@ class MatrixMetricSearch(object):
     """A sparse matrix representation out of features."""
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, sparse_matrix, records_data, is_similarity=True):
+    def __init__(self, sparse_features, records_data, is_similarity=True):
         """
         Args:
-            records_features: List of features in the format of
-               {feature_name1 -> value1, feature_name2->value2, ...}.
+            sparse_features: A csr_matrix with rows that represent records 
+                (corresponding to the elements in records_data) and columns
+                that describe a point in space for each row.
             records_data: Data to return when a doc is matched. Index of
-                corresponds to records_features.
+                corresponds to sparse_features.
             is_similarity: Is the metric employed by this matrix a similarity 
                 measure [0, 1] where 1 means similar or a distance metric 
                 [0, inf] where 0 means more similar
         """
         self.is_similarity = is_similarity
-        self.matrix = sparse_matrix 
+        self.matrix = sparse_features
         self.records_data = np.array(records_data)
 
     @abc.abstractmethod
@@ -42,13 +43,14 @@ class MatrixMetricSearch(object):
     def _similarity(self, a_matrix):
         return
 
-    def nearest_search(self, sparse_matrix, k=1, min_threshold=None,
+    def nearest_search(self, sparse_features, k=1, min_threshold=None,
                        max_threshold=None):
         """Find the closest item(s) for each set of features in features_list.
 
         Args:
-            features_list: A list where each element is a list of features
-                to query.
+            sparse_features: A csr_matrix with rows that represent records 
+                (corresponding to the elements in records_data) and columns
+                that describe a point in space for each row.
             k: Return the k closest results.
             min_threshold: Return items equal or above the threshold.
             max_threshold: Return items equal or below the threshold.
@@ -60,7 +62,7 @@ class MatrixMetricSearch(object):
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
         """
 
-        sim_matrix = self._similarity(sparse_matrix).toarray()
+        sim_matrix = self._similarity(sparse_features).toarray()
 
         if min_threshold == None:
             min_threshold = -1 * float("inf")
@@ -95,8 +97,8 @@ class MatrixMetricSearch(object):
 class CosineSimilarity(MatrixMetricSearch):
     """A matrix that implements cosine similarity search against it."""
 
-    def __init__(self, records_features, records_data):
-        super(CosineSimilarity, self).__init__(records_features, records_data)
+    def __init__(self, sparse_features, records_data):
+        super(CosineSimilarity, self).__init__(sparse_features, records_data)
 
         m_c = self.matrix.copy()
         m_c.data **= 2
@@ -130,8 +132,8 @@ class UnitCosineSimilarity(MatrixMetricSearch):
       * 1**2 == 1 so that operation can be skipped
     """
 
-    def __init__(self, records_features, records_data):
-        super(UnitCosineSimilarity, self).__init__(records_features, 
+    def __init__(self, sparse_features, records_data):
+        super(UnitCosineSimilarity, self).__init__(sparse_features, 
                                                    records_data)
         self.matrix_root_sum_square = \
                 np.sqrt(np.asarray(self.matrix.sum(axis=1)).reshape(-1))
@@ -158,8 +160,8 @@ class SlowEuclideanDistance(MatrixMetricSearch):
     WARNING: This is not optimized.
     """
 
-    def __init__(self, records_features, records_data):
-        super(SlowEuclideanDistance, self).__init__(records_features, 
+    def __init__(self, sparse_features, records_data):
+        super(SlowEuclideanDistance, self).__init__(sparse_features, 
                                                     records_data)
         self.matrix = self.matrix.toarray()
 
