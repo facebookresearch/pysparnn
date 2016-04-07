@@ -5,7 +5,7 @@ Out of the box, PySparNN supports Cosine Similarity.
 
 PySparNN can be easily extended with abritrary similarity metrics (Manhattan, Eculidian, Jaccard, etc).
 
-If your data is NOT SPARSE & you don't require a custom distance function - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
+If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
 
 
@@ -37,12 +37,11 @@ features_list = []
 for sentence in data:
     features_list.append(scentence2features(sentence))
 
-# build a sparse matrix
 dv = DictVectorizer()
-features_list = dv.fit_transform(features_list)
+dv.fit(features_list)
 
 # build the search index!
-cp = snn.ClusterIndex(, data)
+cp = snn.ClusterIndex(dv.transform(features_list), data)
 
 # search the index with a sparse matrix
 search_items = [
@@ -52,6 +51,8 @@ search_items = [
 search_items = dv.transform(search_items)
 
 cp.search(search_items, min_threshold=0.50, k=1, k_clusters=2, return_metric=False)
+>> [['oh hello there'], ['Play it again Sam']]
+
 ```
 
 ## Requirements
