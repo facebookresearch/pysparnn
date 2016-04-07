@@ -7,7 +7,7 @@ PySparNN benefits:
  * Designed to be efficent on sparse data (both on memory and cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Eculidian, Jaccard, etc.
- * (experimental) Min, Max similairty thresholds can be set at query time (not index time). I.e. return the k closest items between 0.9 and 0.8 cosine similarity from an input point.
+ * (work in progress) Min, Max similairty thresholds can be set at query time (not index time). I.e. return the k closest items on the interval [0.9, 0.8] by cosine similarity from an input point. 
 
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
