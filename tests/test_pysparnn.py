@@ -8,8 +8,9 @@
 
 import unittest
 import pysparnn.cluster_pruning as cp
-from pysparnn.matrix_similarity import UnitCosineSimilarity
 from pysparnn.matrix_similarity import SlowEuclideanDistance
+from pysparnn.matrix_similarity import UnitCosineSimilarity
+from sklearn.feature_extraction import DictVectorizer
 
 class PysparnnTest(unittest.TestCase):
     """End to end tests for pysparnn"""
@@ -23,6 +24,7 @@ class PysparnnTest(unittest.TestCase):
         ]
 
         features = [dict([(x, 1) for x in f.split()]) for f in data]
+        features = DictVectorizer().fit_transform(features)
 
         cluster_index = cp.ClusterIndex(features, data)
 
@@ -30,7 +32,7 @@ class PysparnnTest(unittest.TestCase):
                                     k_clusters=1, return_metric=False)
         self.assertEqual([[d] for d in data], ret)
 
-    def test_cosine_unit(self):
+    def test_veccosine(self):
         """Do a quick basic test for index/search functionality"""
         data = [
             'hello world',
@@ -40,6 +42,7 @@ class PysparnnTest(unittest.TestCase):
         ]
 
         features = [dict([(x, 1) for x in f.split()]) for f in data]
+        features = DictVectorizer().fit_transform(features)
 
         cluster_index = cp.ClusterIndex(features, data, UnitCosineSimilarity)
 
@@ -57,6 +60,7 @@ class PysparnnTest(unittest.TestCase):
         ]
 
         features = [dict([(x, 1) for x in f.split()]) for f in data]
+        features = DictVectorizer().fit_transform(features)
 
         cluster_index = cp.ClusterIndex(features, data, SlowEuclideanDistance)
 

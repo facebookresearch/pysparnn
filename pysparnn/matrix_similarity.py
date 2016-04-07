@@ -19,8 +19,7 @@ class MatrixMetricSearch(object):
     """A sparse matrix representation out of features."""
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, records_features, records_data, matrix_val_type=float, 
-                 is_similarity=True):
+    def __init__(self, sparse_matrix, records_data, is_similarity=True):
         """
         Args:
             records_features: List of features in the format of
@@ -29,12 +28,7 @@ class MatrixMetricSearch(object):
                 corresponds to records_features.
         """
         self.is_similarity = is_similarity
-        self.dimension = {}
-        self.inverse_dimension = {}
-        self.matrix_val_type = matrix_val_type
-        self.matrix = self._create_matrix(records_features,
-                                          expand_dimension=True)
-        self.records_features = np.array(records_features)
+        self.matrix = sparse_matrix 
         self.records_data = np.array(records_data)
 
     @abc.abstractmethod
@@ -45,36 +39,7 @@ class MatrixMetricSearch(object):
     def _similarity(self, a_matrix):
         return
 
-    def _create_matrix(self, records_features, expand_dimension=False):
-        """Create a sparse matrix out of a set of features.
-        Args:
-            records_features: List of features in the format of
-               {feature_name1 -> value1, feature_name2->value2, ...}.
-            records_data: Data to return when a doc is matched. Index of
-                corresponds to records_features.
-            expand_dimension: Should the dimension of the space be expanded?
-                True on initialization. False on search.
-        """
-        indptr = [0]
-        indices = []
-        data = []
-        # could force records_features to be a list of (int, float) instead of
-        #  ageneric dict (that can take strings)
-        for features in records_features:
-            for feature, value in features.iteritems():
-                if expand_dimension or feature in self.dimension:
-                    index = self.dimension.setdefault(feature,
-                                                      len(self.dimension))
-                    self.inverse_dimension[index] = feature
-                    indices.append(index)
-                    data.append(self._transform_value(value))
-            indptr.append(len(indices))
-
-        shape = (len(records_features), len(self.dimension))
-        return scipy.sparse.csr_matrix((data, indices, indptr), 
-                dtype=self.matrix_val_type, shape=shape)
-
-    def nearest_search(self, features_list, k=1, min_threshold=None,
+    def nearest_search(self, sparse_matrix, k=1, min_threshold=None,
                        max_threshold=None):
         """Find the closest item(s) for each set of features in features_list.
 
@@ -91,8 +56,8 @@ class MatrixMetricSearch(object):
             [[(score1_1, item1_1), ..., (score1_k, item1_k)],
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
         """
-        a_matrix = self._create_matrix(features_list)
-        sim_matrix = self._similarity(a_matrix).toarray()
+
+        sim_matrix = self._similarity(sparse_matrix).toarray()
 
         if min_threshold == None:
             min_threshold = -1 * float("inf")
@@ -128,8 +93,7 @@ class CosineSimilarity(MatrixMetricSearch):
     """A matrix that implements cosine similarity search against it."""
 
     def __init__(self, records_features, records_data):
-        super(CosineSimilarity, self).__init__(records_features, records_data, 
-                                               matrix_val_type=float)
+        super(CosineSimilarity, self).__init__(records_features, records_data)
 
         m_c = self.matrix.copy()
         m_c.data **= 2
@@ -158,7 +122,6 @@ class CosineSimilarity(MatrixMetricSearch):
 
 class UnitCosineSimilarity(MatrixMetricSearch):
     """A matrix that implements cosine similarity search against it. 
-
     Assumes unit-vectors and takes some shortucts:
       * Uses integers instead of floats
       * 1**2 == 1 so that operation can be skipped
@@ -166,8 +129,7 @@ class UnitCosineSimilarity(MatrixMetricSearch):
 
     def __init__(self, records_features, records_data):
         super(UnitCosineSimilarity, self).__init__(records_features, 
-                                                   records_data,
-                                                   matrix_val_type=int)
+                                                   records_data)
         self.matrix_root_sum_square = \
                 np.sqrt(np.asarray(self.matrix.sum(axis=1)).reshape(-1))
 
@@ -195,8 +157,7 @@ class SlowEuclideanDistance(MatrixMetricSearch):
 
     def __init__(self, records_features, records_data):
         super(SlowEuclideanDistance, self).__init__(records_features, 
-                                                    records_data, 
-                                                    is_similarity=False)
+                                                    records_data)
         self.matrix = self.matrix.toarray()
 
     def _transform_value(self, v):

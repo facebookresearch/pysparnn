@@ -14,6 +14,7 @@ import collections
 import math
 import random
 import numpy as np
+from scipy.sparse import vstack
 import pysparnn.matrix_similarity
 
 def k_best(tuple_list, k, return_metric, is_similarity):
@@ -65,22 +66,25 @@ class ClusterIndex(object):
             similarity_class: Class that defines the similarity measure to use.
         """
 
-        self.records_features = np.array(records_features)
+        self.records_features = records_features
         self.records_data = np.array(records_data)
 
         # could make this recursive at the cost of recall accuracy
         # keeping to a single layer for simplicity/accuracy
-        num_clusters = int(math.sqrt(len(self.records_features)))
-        clusters_selection = random.sample(self.records_features, num_clusters)
+        num_clusters = int(math.sqrt(self.records_features.shape[0]))
+        records_index = np.arange(self.records_features.shape[0])
+        clusters_selection = random.sample(records_index, num_clusters)
+        clusters_selection = self.records_features[clusters_selection]
 
         item_to_clusters = collections.defaultdict(list)
 
         root = similarity_type(clusters_selection,
-                               list(range(len(clusters_selection))))
+                               np.arange(clusters_selection.shape[0]))
 
         rng_step = 10000
-        for rng in range(0, len(records_features), rng_step):
-            records_rng = records_features[rng:rng + rng_step]
+        for rng in range(0, records_features.shape[0], rng_step):
+            max_rng = min(rng + rng_step, records_features.shape[0])
+            records_rng = records_features[rng:max_rng]
             for i, clstrs in enumerate(root.nearest_search(records_rng, k=1)):
                 for _, cluster in clstrs:
                     item_to_clusters[cluster].append(i + rng)
@@ -90,13 +94,14 @@ class ClusterIndex(object):
         for k, clust_sel in enumerate(clusters_selection):
             clustr = item_to_clusters[k]
             if len(clustr) > 0:
-                mtx = similarity_type(self.records_features[clustr],
+                mtx = similarity_type(vstack(self.records_features[clustr]),
                                       self.records_data[clustr])
                 self.clusters.append(mtx)
                 cluster_keeps.append(clust_sel)
 
+        cluster_keeps = vstack(cluster_keeps)
         self.root = similarity_type(cluster_keeps,
-                                    list(range(len(cluster_keeps))))
+                                    np.arange(cluster_keeps.shape[0]))
 
 
     def search(self, records_features, k=1, min_threshold=0.95, 
@@ -135,7 +140,7 @@ class ClusterIndex(object):
             for _, cluster in nearest_clusters:
 
                 cluster_items = self.clusters[cluster].\
-                        nearest_search([records_features[i]], k=k,
+                        nearest_search(records_features[i], k=k,
                                        min_threshold=min_threshold,
                                        max_threshold=max_threshold)
 
