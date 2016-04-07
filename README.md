@@ -13,7 +13,7 @@ If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
 
 
-The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is 1.5x faster on the 20newsgroups dataset. A more thurough benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/sparse_search_comparison.ipynb)
+The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~1.5x faster on the 20newsgroups dataset. A more thurough benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/sparse_search_comparison.ipynb)
 
 Notes:
 * A future update may allow incremental insertions.
