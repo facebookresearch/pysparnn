@@ -1,7 +1,7 @@
 # PySparNN
 Approximate Nearest Neighbor Search for Sparse Data in Python! This library is well suited to finding nearest neighbors in sparse, high dimensional spaces (like text documents). 
 
-Out of the box, PySparNN supports Cosine Similarity.
+Out of the box, PySparNN supports Cosine Distance (1 - cosine_similarity).
 
 PySparNN benefits:
  * Designed to be efficent on sparse data (both on memory and cpu).
@@ -17,6 +17,7 @@ The most comparable library to PySparNN is scikit-learn's LSHForrest module. As 
 
 Notes:
 * A future update may allow incremental insertions.
+* 
 
 ## Example Usage
 ### Simple Example
