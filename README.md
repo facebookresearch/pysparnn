@@ -17,6 +17,7 @@ Notes:
 ## Example Usage
 ```
 import pysparnn as snn
+from sklearn.feature_extraction import DictVectorizer
 
 data = [
     'hello world',
@@ -36,15 +37,18 @@ features_list = []
 for sentence in data:
     features_list.append(scentence2features(sentence))
 
+dv = DictVectorizer()
+dv.fit(features_list)
+
 # build the search index!
-cp = snn.ClusterIndex(features_list, data)
+cp = snn.ClusterIndex(dv.transform(features_list), data)
 
 # search the index
 search_items = [
     scentence2features('oh there'),
     scentence2features('Play it again Frank')
 ]
-
+search_items = dv.transform(search_items)
 cp.search(search_items, min_threshold=0.50, k=1, return_metric=False)
 >> [['oh hello there'], ['Play it again Sam']]
 
