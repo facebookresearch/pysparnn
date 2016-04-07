@@ -3,7 +3,7 @@ Approximate Nearest Neighbor Search for Sparse Data in Python! This library is w
 
 Out of the box, PySparNN supports Cosine Similarity.
 
-PySparNN can be easily extended with abritrary similarity metrics (Manhattan, Eculidian, Jaccard, etc).
+PySparNN can be easily extended with other metrics: Manhattan, Eculidian, Jaccard, etc.
 
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
@@ -15,7 +15,7 @@ Notes:
 * A future update may allow incremental insertions.
 
 ## Example Usage
-### Intro
+### Simple
 ```
 import random
 import pysparnn as snn
@@ -29,12 +29,13 @@ for i in xrange(1000):
 features = csr_matrix(features)
     
 # build the search index!
-cp = snn.ClusterIndex(features, range(1000))
+data_to_return = range(1000)
+cp = snn.ClusterIndex(features, data_to_return)
 
 cp.search(features[:5], min_threshold=0.50, k=1, return_metric=False)
 >> [[0], [1], [2], [3], [4]]
 ```
-### Text Intro
+### Text
 ```
 import pysparnn as snn
 from sklearn.feature_extraction import DictVectorizer
