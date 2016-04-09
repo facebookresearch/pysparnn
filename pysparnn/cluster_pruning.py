@@ -27,7 +27,7 @@ def k_best(tuple_list, k, return_metric):
     Returns:
         The K-best tuples (distance, value) by distance score.
     """
-    tuple_lst = sorted(tuple_list, key=lambda x: x[0], 
+    tuple_lst = sorted(tuple_list, key=lambda x: x[0],
                        reverse=False)[:k]
     if return_metric:
         return tuple_lst
@@ -57,7 +57,7 @@ class ClusterIndex(object):
         matricies.
 
         Args:
-            sparse_features: A csr_matrix with rows that represent records 
+            sparse_features: A csr_matrix with rows that represent records
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             records_data: Data to return when a doc is matched. Index of
@@ -102,21 +102,23 @@ class ClusterIndex(object):
         self.root = distance_type(cluster_keeps,
                                     np.arange(cluster_keeps.shape[0]))
 
-
-    def search(self, sparse_features, k=1, min_threshold=None, 
-               max_threshold=None, k_clusters=1, return_metric=True):
+    def search(self, sparse_features, k=1, min_distance=None,
+               max_distance=None, k_clusters=1, return_metric=True):
         """Find the closest item(s) for each feature_list in.
 
         Args:
-            sparse_features: A csr_matrix with rows that represent records 
+            sparse_features: A csr_matrix with rows that represent records
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             k: Return the k closest results.
-            min_threshold: Return items only at or above the threshold.
-            max_threshold: Return items only at or below the threshold.
+            min_distance: Return items at least min_distance away from the
+                query point.
+            max_distance: Return items no more than max_distance away from the
+                query point.
             k_clusters: number of clusters to search. This increases recall at
                 the cost of some speed.
-            return_metric: Return metric values? 
+            return_metric: Return metric values?
+
         Returns:
             For each element in features_list, return the k-nearest items
             and (optionally) their distance
@@ -129,7 +131,9 @@ class ClusterIndex(object):
         # could make this recursive at the cost of recall accuracy
         # should batch requests to clusters to make this more efficent
         ret = []
-        nearest = self.root.nearest_search(sparse_features, k=k_clusters)
+
+        nearest = self.root.nearest_search(sparse_features, k=k_clusters,
+                                           min_distance=min_distance)
 
         for i, nearest_clusters in enumerate(nearest):
             curr_ret = []
@@ -138,8 +142,8 @@ class ClusterIndex(object):
 
                 cluster_items = self.clusters[cluster].\
                         nearest_search(sparse_features[i], k=k,
-                                       min_threshold=min_threshold,
-                                       max_threshold=max_threshold)
+                                       min_distance=min_distance,
+                                       max_distance=max_distance)
 
                 for elements in cluster_items:
                     if len(elements) > 0:

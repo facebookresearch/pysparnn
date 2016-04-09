@@ -64,6 +64,6 @@ class PysparnnTest(unittest.TestCase):
 
         cluster_index = cp.ClusterIndex(features, data, SlowEuclideanDistance)
 
-        ret = cluster_index.search(features, min_threshold=0.0, k=1, 
-                                   k_clusters=1, return_metric=False)
+        ret = cluster_index.search(features, k=1, k_clusters=1, 
+                                   return_metric=False)
         self.assertEqual([[d] for d in data], ret)

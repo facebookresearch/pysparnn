@@ -45,26 +45,28 @@ class MatrixMetricSearch(object):
     def _distance(self, a_matrix):
         """
         Args:
-            a_matrix: A csr_matrix with rows that represent records 
-                to search against. 
+            a_matrix: A csr_matrix with rows that represent records
+                to search against.
             records_data: Data to return when a doc is matched. Index of
                 corresponds to sparse_features.
-        Returns: 
+        Returns:
             A dense array representing distance.
         """
         return
 
-    def nearest_search(self, sparse_features, k=1, min_threshold=None,
-                       max_threshold=None):
+    def nearest_search(self, sparse_features, k=1, min_distance=None,
+                       max_distance=None):
         """Find the closest item(s) for each set of features in features_list.
 
         Args:
-            sparse_features: A csr_matrix with rows that represent records 
+            sparse_features: A csr_matrix with rows that represent records
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             k: Return the k closest results.
-            min_threshold: Return items equal or above the threshold.
-            max_threshold: Return items equal or below the threshold.
+            min_distance: Return items at least min_distance from the query
+                point.
+            max_distance: Return items at most max_distance from the query
+                point.
 
         Returns:
             For each element in features_list, return the k-nearest items
@@ -75,14 +77,14 @@ class MatrixMetricSearch(object):
 
         dist_matrix = self._distance(sparse_features)
 
-        if min_threshold == None:
-            min_threshold = -1 * float("inf")
+        if min_distance == None:
+            min_distance = -1 * float("inf")
 
-        if max_threshold == None:
-            max_threshold = float("inf")
+        if max_distance == None:
+            max_distance = float("inf")
 
-        dist_filter = dist_matrix >= min_threshold
-        dist_filter &= (dist_matrix <= max_threshold)
+        dist_filter = dist_matrix >= min_distance
+        dist_filter &= (dist_matrix <= max_distance)
 
         ret = []
         for i in range(dist_matrix.shape[0]):
@@ -105,7 +107,7 @@ class CosineDistance(MatrixMetricSearch):
     """A matrix that implements cosine distance search against it.
 
     cosine_distance = 1 - cosine_similarity
-    
+
     Note: We want items that are more similar to be closer to zero so we are
     going to instead return 1 - cosine_similarity. We do this so similarity
     and distance metrics can be treated the same way.
@@ -127,7 +129,6 @@ class CosineDistance(MatrixMetricSearch):
         # what is the implmentation of transpose? can i change the order?
         dprod = a_matrix.dot(self.matrix.transpose()) * 1.0
 
-        # do i need to copy?
         a_c = a_matrix.copy()
         a_c.data **= 2
         a_root_sum_square = np.asarray(a_c.sum(axis=1)).reshape(-1)
@@ -140,8 +141,8 @@ class CosineDistance(MatrixMetricSearch):
         return 1 - dprod.multiply(magnitude).toarray()
 
 class UnitCosineDistance(MatrixMetricSearch):
-    """A matrix that implements cosine distance search against it. 
-    
+    """A matrix that implements cosine distance search against it.
+
     cosine_distance = 1 - cosine_similarity
 
     Note: We want items that are more similar to be closer to zero so we are
@@ -154,8 +155,7 @@ class UnitCosineDistance(MatrixMetricSearch):
     """
 
     def __init__(self, sparse_features, records_data):
-        super(UnitCosineDistance, self).__init__(sparse_features, 
-                                                 records_data)
+        super(UnitCosineDistance, self).__init__(sparse_features, records_data)
         self.matrix_root_sum_square = \
                 np.sqrt(np.asarray(self.matrix.sum(axis=1)).reshape(-1))
 
@@ -177,12 +177,12 @@ class UnitCosineDistance(MatrixMetricSearch):
         return 1 - dprod.multiply(magnitude).toarray()
 
 class SlowEuclideanDistance(MatrixMetricSearch):
-    """A matrix that implements euclidean distance search against it. 
+    """A matrix that implements euclidean distance search against it.
     WARNING: This is not optimized.
     """
 
     def __init__(self, sparse_features, records_data):
-        super(SlowEuclideanDistance, self).__init__(sparse_features, 
+        super(SlowEuclideanDistance, self).__init__(sparse_features,
                                                     records_data)
         self.matrix = self.matrix.toarray()
 
@@ -193,5 +193,5 @@ class SlowEuclideanDistance(MatrixMetricSearch):
         """Euclidean distance"""
 
         return scipy.spatial.distance.cdist(
-                a_matrix.toarray(), 
+                a_matrix.toarray(),
                 self.matrix, 'euclidean')
