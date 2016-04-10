@@ -7,13 +7,13 @@ PySparNN benefits:
  * Designed to be efficent on sparse data (memory & cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Euclidian, Jaccard, etc.
- * *Work in progress* - Min, Max distance thresholds can be set at query time (not index time). Example: return the k closest items on the interval [0.8, 0.9] from a query point. 
+ * *beta* - Min, Max distance thresholds can be set at query time (not index time). Example: return the k closest items on the interval [0.8, 0.9] from a query point. 
 
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
 
 
-The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~1.5x faster on the 20newsgroups dataset. A more robust benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/examples/sparse_search_comparison.ipynb)
+The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~1.75x faster on the 20newsgroups dataset. A more robust benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/examples/sparse_search_comparison.ipynb)
 
 Notes:
 * A future update may allow incremental insertions.
