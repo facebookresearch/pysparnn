@@ -127,7 +127,7 @@ class CosineDistance(MatrixMetricSearch):
     def _distance(self, a_matrix):
         """Vectorised cosine distance"""
         # what is the implmentation of transpose? can i change the order?
-        dprod = a_matrix.dot(self.matrix.transpose()) * 1.0
+        dprod = self.matrix.dot(a_matrix.transpose()).transpose() * 1.0
 
         a_c = a_matrix.copy()
         a_c.data **= 2
@@ -165,7 +165,7 @@ class UnitCosineDistance(MatrixMetricSearch):
     def _distance(self, a_matrix):
         """Vectorised cosine distance"""
         # what is the implmentation of transpose? can i change the order?
-        dprod = a_matrix.dot(self.matrix.transpose()) * 1.0
+        dprod = self.matrix.dot(a_matrix.transpose()).transpose() * 1.0
 
         a_root_sum_square = np.asarray(a_matrix.sum(axis=1)).reshape(-1)
         a_root_sum_square = \
