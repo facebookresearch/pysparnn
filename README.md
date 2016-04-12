@@ -83,6 +83,7 @@ PySparNN requires numpy and scipy. Tested with numpy 1.10.4 and scipy 0.17.0.
 
 ## Installation
 ```
+# clone pysparnn
 cd pysparnn 
 pip install -r requirements.txt 
 python setup.py install
