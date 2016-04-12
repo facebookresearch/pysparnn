@@ -81,6 +81,11 @@ cp.search(search_items, k=1, k_clusters=2, return_metric=False)
 ## Requirements
 PySparNN requires numpy and scipy. Tested with numpy 1.10.4 and scipy 0.17.0.
 
+## Installation
+#. cd pysparnn 
+#. pip install -r requirements.txt 
+#. python setup.py install
+
 ## How PySparNN works
 Searching for a document in an collection of K documents is naively O(K) (assuming documents are constant sized). 
 
