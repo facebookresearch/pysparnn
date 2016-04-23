@@ -17,22 +17,18 @@ import numpy as np
 from scipy.sparse import vstack
 import pysparnn.matrix_distance
 
-def k_best(tuple_list, k, return_metric):
+def k_best(tuple_list, k):
     """Get the k-best tuples by distance.
     Args:
         tuple_list: List of tuples. (distance, value)
         k: Number of tuples to return.
-        return_metric: Boolean value indicating if metric values should be
-            returned.
     Returns:
         The K-best tuples (distance, value) by distance score.
     """
     tuple_lst = sorted(tuple_list, key=lambda x: x[0],
                        reverse=False)[:k]
-    if return_metric:
-        return tuple_lst
-    else:
-        return [x[1] for x in tuple_lst]
+
+    return tuple_lst
 
 class ClusterIndex(object):
     """ Search structure which gives speedup at slight loss of recall.
@@ -48,11 +44,15 @@ class ClusterIndex(object):
             the K doccuments you assign it to the closest neighbor in the top
             level.
 
-            This breaks up one O(K) search into two O(sqrt(K)) searches which
+            This breaks up one O(K) search into O(2 * sqrt(K)) searches which
             is much much faster when K is big.
+
+            This generalizes to h levels. The runtime becomes:
+                O(h * h_root(K))
     """
     def __init__(self, sparse_features, records_data,
-                 distance_type=pysparnn.matrix_distance.CosineDistance):
+                 distance_type=pysparnn.matrix_distance.CosineDistance,
+                 matrix_size=None):
         """Create a search index composed of recursively defined sparse
         matricies.
 
@@ -63,47 +63,64 @@ class ClusterIndex(object):
             records_data: Data to return when a doc is matched. Index of
                 corresponds to records_features.
             distance_type: Class that defines the distance measure to use.
+            matrix_size: Ideal size for matrix multiplication. This controls
+                the depth of the tree. Defaults to 2 levels (approx).
         """
 
-        # self.sparse_features = sparse_features
-        records_data = np.array(records_data)
+        self.is_terminal = False 
+        num_records = sparse_features.shape[0]
 
-        # could make this recursive at the cost of recall accuracy
-        # keeping to a single layer for simplicity/accuracy
-        num_clusters = int(math.sqrt(sparse_features.shape[0]))
-        records_index = np.arange(sparse_features.shape[0])
-        clusters_selection = random.sample(records_index, num_clusters)
-        clusters_selection = sparse_features[clusters_selection]
+        if matrix_size is None:
+            matrix_size = int(np.sqrt(num_records))
 
-        item_to_clusters = collections.defaultdict(list)
+        num_levels = int(np.ceil(np.log(num_records)/np.log(matrix_size)))
 
-        root = distance_type(clusters_selection,
-                               np.arange(clusters_selection.shape[0]))
+        if num_levels <= 1:
+            self.is_terminal = True
+            self.root = distance_type(sparse_features,
+                                 records_data)
+        else:
+            self.is_terminal = False 
+            records_data = np.array(records_data)
 
-        rng_step = 10000
-        for rng in range(0, sparse_features.shape[0], rng_step):
-            max_rng = min(rng + rng_step, sparse_features.shape[0])
-            records_rng = sparse_features[rng:max_rng]
-            for i, clstrs in enumerate(root.nearest_search(records_rng, k=1)):
-                for _, cluster in clstrs:
-                    item_to_clusters[cluster].append(i + rng)
+            records_index = np.arange(sparse_features.shape[0])
+            clusters_size = min(matrix_size, num_records)
+            clusters_selection = random.sample(records_index, clusters_size)
+            clusters_selection = sparse_features[clusters_selection]
 
-        self.clusters = []
-        cluster_keeps = []
-        for k, clust_sel in enumerate(clusters_selection):
-            clustr = item_to_clusters[k]
-            if len(clustr) > 0:
-                mtx = distance_type(vstack(sparse_features[clustr]),
-                                      records_data[clustr])
-                self.clusters.append(mtx)
-                cluster_keeps.append(clust_sel)
+            item_to_clusters = collections.defaultdict(list)
 
-        cluster_keeps = vstack(cluster_keeps)
-        self.root = distance_type(cluster_keeps,
-                                    np.arange(cluster_keeps.shape[0]))
+            root = distance_type(clusters_selection,
+                                   np.arange(clusters_selection.shape[0]))
+
+            rng_step = matrix_size
+            for rng in range(0, sparse_features.shape[0], rng_step):
+                max_rng = min(rng + rng_step, sparse_features.shape[0])
+                records_rng = sparse_features[rng:max_rng]
+                for i, clstrs in enumerate(root.nearest_search(records_rng, k=1)):
+                    for _, cluster in clstrs:
+                        item_to_clusters[cluster].append(i + rng)
+
+            clusters = []
+            cluster_keeps = []
+            for k, clust_sel in enumerate(clusters_selection):
+                clustr = item_to_clusters[k]
+                if len(clustr) > 0:
+                    index = ClusterIndex(
+                                vstack(sparse_features[clustr]), 
+                                records_data[clustr],
+                                distance_type=distance_type,
+                                matrix_size=matrix_size)
+                    clusters.append(index)
+                    cluster_keeps.append(clust_sel)
+
+            cluster_keeps = vstack(cluster_keeps)
+            clusters = np.array(clusters)
+            
+            self.root = distance_type(cluster_keeps, clusters)
 
     def search(self, sparse_features, k=1, min_distance=None,
-               max_distance=None, k_clusters=1, return_metric=True):
+               max_distance=None, k_clusters=1):
         """Find the closest item(s) for each feature_list in.
 
         Args:
@@ -112,44 +129,57 @@ class ClusterIndex(object):
                 that describe a point in space for each row.
             k: Return the k closest results.
             min_distance: Return items at least min_distance away from the
-                query point.
+                query point. Defaults to any distance. 
             max_distance: Return items no more than max_distance away from the
-                query point.
-            k_clusters: number of clusters to search. This increases recall at
-                the cost of some speed.
-            return_metric: Return metric values?
+                query point. Defaults to any distance.
+            k_clusters: number of branches (clusters) to search at each level. 
+                This increases recall at the cost of some speed. 
+                
+                Note: min_distance, max_distance constraints are also applied.
+                    This means there may be less than k_clusters searched at 
+                    each level. We are garunteed to always search at least the 
+                    closest branch above min_distance. Further elements are 
+                    added so long as the k_clusters and max_distance checks 
+                    pass.
+
+                    This means each search will fully traverse at least one 
+                    (but at most k_clusters) clusters at each level. 
 
         Returns:
             For each element in features_list, return the k-nearest items
-            and (optionally) their distance
+            and their distance score
             [[(score1_1, item1_1), ..., (score1_k, item1_k)],
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
-
-             Note: if return_metric is False then only items are returned
-                and not as a tuple.
         """
-        # could make this recursive at the cost of recall accuracy
-        # should batch requests to clusters to make this more efficent
-        ret = []
+        if self.is_terminal:
+            ret = self.root.nearest_search(sparse_features, k=k,
+                                                  min_distance=min_distance,
+                                                  max_distance=max_distance)
+        else:
+            ret = []
+            nearest = self.root.nearest_search(sparse_features, k=k_clusters)
+            
+            for i, nearest_clusters in enumerate(nearest):
+                curr_ret = []
+                for distance, cluster in nearest_clusters:
 
-        nearest = self.root.nearest_search(sparse_features, k=k_clusters,
-                                           min_distance=min_distance)
+                    # skip over entries that are not within the distance
+                    # threshold but always return the closest branch
+                    empty_results = not len(curr_ret) == 0
+                    min_distance_fail = distance < min_distance
+                    max_distance_fail = distance > max_distance
+                    if (empty_results or min_distance_fail) and\
+                            max_distance_fail:
+                        continue
 
-        for i, nearest_clusters in enumerate(nearest):
-            curr_ret = []
+                    cluster_items = cluster.\
+                            search(sparse_features[i], k=k,
+                                   k_clusters=k_clusters,
+                                   min_distance=min_distance,
+                                   max_distance=max_distance)
 
-            for _, cluster in nearest_clusters:
-
-                cluster_items = self.clusters[cluster].\
-                        nearest_search(sparse_features[i], k=k,
-                                       min_distance=min_distance,
-                                       max_distance=max_distance)
-
-                for elements in cluster_items:
-                    if len(elements) > 0:
-                        if return_metric:
+                    for elements in cluster_items:
+                        if len(elements) > 0:
                             curr_ret.extend(elements)
-                        else:
-                            curr_ret.extend(elements)
-            ret.append(k_best(curr_ret, k, return_metric))
+                ret.append(k_best(curr_ret, k))
         return ret
