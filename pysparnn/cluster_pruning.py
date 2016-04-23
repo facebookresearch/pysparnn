@@ -119,8 +119,8 @@ class ClusterIndex(object):
             
             self.root = distance_type(cluster_keeps, clusters)
 
-    def search(self, sparse_features, k=1, min_distance=None,
-               max_distance=None, k_clusters=1):
+    def _search(self, sparse_features, k=1, min_distance=None,
+                max_distance=None, k_clusters=1):
         """Find the closest item(s) for each feature_list in.
 
         Args:
@@ -163,8 +163,9 @@ class ClusterIndex(object):
                 curr_ret = []
                 for distance, cluster in nearest_clusters:
 
-                    # skip over entries that are not within the distance
-                    # threshold but always return the closest branch
+                    # always return the closest branch above min_distance
+                    # then skip over entries that are not within the distance
+                    # threshold but 
                     empty_results = not len(curr_ret) == 0
                     min_distance_fail = distance < min_distance
                     max_distance_fail = distance > max_distance
@@ -183,3 +184,55 @@ class ClusterIndex(object):
                             curr_ret.extend(elements)
                 ret.append(k_best(curr_ret, k))
         return ret
+
+    def search(self, sparse_features, k=1, min_distance=None,
+               max_distance=None, k_clusters=1, return_distance=True):
+        """Find the closest item(s) for each feature_list in.
+
+        Args:
+            sparse_features: A csr_matrix with rows that represent records
+                (corresponding to the elements in records_data) and columns
+                that describe a point in space for each row.
+            k: Return the k closest results.
+            min_distance: Return items at least min_distance away from the
+                query point. Defaults to any distance. 
+            max_distance: Return items no more than max_distance away from the
+                query point. Defaults to any distance.
+            k_clusters: number of branches (clusters) to search at each level. 
+                This increases recall at the cost of some speed. 
+                
+                Note: min_distance, max_distance constraints are also applied.
+                    This means there may be less than k_clusters searched at 
+                    each level. We are garunteed to always search at least the 
+                    closest branch above min_distance. Further elements are 
+                    added so long as the k_clusters and max_distance checks 
+                    pass.
+
+                    This means each search will fully traverse at least one 
+                    (but at most k_clusters) clusters at each level. 
+
+        Returns:
+            For each element in features_list, return the k-nearest items
+            and (optionally) their distance score
+            [[(score1_1, item1_1), ..., (score1_k, item1_k)],
+             [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
+
+            Note: if return_distance == False then the scores are omitted
+            [[item1_1, ..., item1_k],
+             [item2_1, ..., item2_k], ...]
+
+
+        """
+        results = self._search(sparse_features=sparse_features, 
+                               k=k,
+                               min_distance=min_distance,
+                               max_distance=max_distance,
+                               k_clusters=k_clusters)
+        if return_distance:
+            return results
+        else:
+            no_distance = []
+            for result in results:
+                no_distance.append([x for y, x in result])
+            return no_distance
+            
