@@ -6,7 +6,7 @@ from distutils.core import setup
 files = []
 
 setup(name = "pysparnn",
-    version = "0.1",
+    version = "0.2",
     description = "Sparse (approximate) nearest neighbor search for python!",
     author = "Spencer Beecher",
     author_email = "spencebeecher@gmail.com",

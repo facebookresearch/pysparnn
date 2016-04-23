@@ -98,6 +98,9 @@ We randomly pick sqrt(K) candidate items to be in the top level. Then -- each do
 
 This breaks up one O(K) search into two O(sqrt(K)) searches which is much much faster when K is big!
 
+This generalizes to h levels. The runtime becomes:
+    O(h * h_root(K))
+
 ## Further Information
 http://nlp.stanford.edu/IR-book/html/htmledition/cluster-pruning-1.html
 
