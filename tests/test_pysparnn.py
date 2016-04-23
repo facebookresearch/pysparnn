@@ -78,6 +78,8 @@ class PysparnnTest(unittest.TestCase):
         
         # build the search index!
         data_to_return = range(1000)
+
+        # matrix size smaller - this forces the index to have multiple levels
         cluster_index= cp.ClusterIndex(features, data_to_return, 
                                        matrix_size=10)
         
