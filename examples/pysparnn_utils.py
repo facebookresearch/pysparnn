@@ -15,7 +15,7 @@ from sklearn.feature_extraction import DictVectorizer
 import pysparnn
 
 class PySparNNTextSearch:
-    def __init__(self, docs, datas):
+    def __init__(self, docs, datas, matrix_size=2000):
         
         self.dv = DictVectorizer()
         dicts = []
@@ -23,15 +23,15 @@ class PySparNNTextSearch:
             dicts.append(dict([(w, 1) for w in d]))
         self.dv.fit(dicts)
         features = csr_matrix(self.dv.transform(dicts), dtype=int)
-        self.cp = pysparnn.ClusterIndex(features, datas, pysparnn.matrix_distance.UnitCosineDistance)
+        self.cp = pysparnn.ClusterIndex(features, datas, pysparnn.matrix_distance.UnitCosineDistance, matrix_size=matrix_size)
         
-    def search(self, docs, k=1, min_distance=None, max_distance=None, k_clusters=1, return_metric=False):
+    def search(self, docs, k=1, min_distance=None, max_distance=None, k_clusters=1, return_distance=False):
         dicts = []
         for d in docs:
             dicts.append(dict([(w, 1) for w in d]))
         features = csr_matrix(self.dv.transform(dicts), dtype=int)
         return self.cp.search(features, k=k, min_distance=min_distance, max_distance=max_distance, 
-                              k_clusters=k_clusters, return_metric=return_metric)
+                              k_clusters=k_clusters, return_distance=return_distance)
 
 class LSHForestSearch:
     def __init__(self, docs):

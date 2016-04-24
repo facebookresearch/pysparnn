@@ -11,7 +11,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import collections
-import math
 import random
 import numpy as np
 from scipy.sparse import vstack
@@ -50,6 +49,7 @@ class ClusterIndex(object):
             This generalizes to h levels. The runtime becomes:
                 O(h * h_root(K))
     """
+
     def __init__(self, sparse_features, records_data,
                  distance_type=pysparnn.matrix_distance.CosineDistance,
                  matrix_size=None):
@@ -67,20 +67,22 @@ class ClusterIndex(object):
                 the depth of the tree. Defaults to 2 levels (approx).
         """
 
-        self.is_terminal = False 
+        self.is_terminal = False
         num_records = sparse_features.shape[0]
 
         if matrix_size is None:
             matrix_size = int(np.sqrt(num_records))
+        else:
+            matrix_size = int(matrix_size)
 
-        num_levels = int(np.ceil(np.log(num_records)/np.log(matrix_size)))
+        num_levels = np.log(num_records)/np.log(matrix_size)
 
-        if num_levels <= 1:
+        if num_levels <= 1.4:
             self.is_terminal = True
             self.root = distance_type(sparse_features,
-                                 records_data)
+                                      records_data)
         else:
-            self.is_terminal = False 
+            self.is_terminal = False
             records_data = np.array(records_data)
 
             records_index = np.arange(sparse_features.shape[0])
@@ -91,7 +93,7 @@ class ClusterIndex(object):
             item_to_clusters = collections.defaultdict(list)
 
             root = distance_type(clusters_selection,
-                                   np.arange(clusters_selection.shape[0]))
+                                 np.arange(clusters_selection.shape[0]))
 
             rng_step = matrix_size
             for rng in range(0, sparse_features.shape[0], rng_step):
@@ -106,17 +108,16 @@ class ClusterIndex(object):
             for k, clust_sel in enumerate(clusters_selection):
                 clustr = item_to_clusters[k]
                 if len(clustr) > 0:
-                    index = ClusterIndex(
-                                vstack(sparse_features[clustr]), 
-                                records_data[clustr],
-                                distance_type=distance_type,
-                                matrix_size=matrix_size)
+                    index = ClusterIndex(vstack(sparse_features[clustr]),
+                                         records_data[clustr],
+                                         distance_type=distance_type,
+                                         matrix_size=matrix_size)
                     clusters.append(index)
                     cluster_keeps.append(clust_sel)
 
             cluster_keeps = vstack(cluster_keeps)
             clusters = np.array(clusters)
-            
+
             self.root = distance_type(cluster_keeps, clusters)
 
     def _search(self, sparse_features, k=1, min_distance=None,
@@ -129,21 +130,21 @@ class ClusterIndex(object):
                 that describe a point in space for each row.
             k: Return the k closest results.
             min_distance: Return items at least min_distance away from the
-                query point. Defaults to any distance. 
+                query point. Defaults to any distance.
             max_distance: Return items no more than max_distance away from the
                 query point. Defaults to any distance.
-            k_clusters: number of branches (clusters) to search at each level. 
-                This increases recall at the cost of some speed. 
-                
+            k_clusters: number of branches (clusters) to search at each level.
+                This increases recall at the cost of some speed.
+
                 Note: min_distance, max_distance constraints are also applied.
-                    This means there may be less than k_clusters searched at 
-                    each level. We are garunteed to always search at least the 
-                    closest branch above min_distance. Further elements are 
-                    added so long as the k_clusters and max_distance checks 
+                    This means there may be less than k_clusters searched at
+                    each level. We are garunteed to always search at least the
+                    closest branch above min_distance. Further elements are
+                    added so long as the k_clusters and max_distance checks
                     pass.
 
-                    This means each search will fully traverse at least one 
-                    (but at most k_clusters) clusters at each level. 
+                    This means each search will fully traverse at least one
+                    (but at most k_clusters) clusters at each level.
 
         Returns:
             For each element in features_list, return the k-nearest items
@@ -153,19 +154,18 @@ class ClusterIndex(object):
         """
         if self.is_terminal:
             ret = self.root.nearest_search(sparse_features, k=k,
-                                                  min_distance=min_distance,
-                                                  max_distance=max_distance)
+                                           min_distance=min_distance,
+                                           max_distance=max_distance)
         else:
             ret = []
             nearest = self.root.nearest_search(sparse_features, k=k_clusters)
-            
+
             for i, nearest_clusters in enumerate(nearest):
                 curr_ret = []
                 for distance, cluster in nearest_clusters:
 
                     # always return the closest branch above min_distance
                     # then skip over entries that are not within the distance
-                    # threshold but 
                     empty_results = not len(curr_ret) == 0
                     min_distance_fail = distance < min_distance
                     max_distance_fail = distance > max_distance
@@ -195,21 +195,21 @@ class ClusterIndex(object):
                 that describe a point in space for each row.
             k: Return the k closest results.
             min_distance: Return items at least min_distance away from the
-                query point. Defaults to any distance. 
+                query point. Defaults to any distance.
             max_distance: Return items no more than max_distance away from the
                 query point. Defaults to any distance.
-            k_clusters: number of branches (clusters) to search at each level. 
-                This increases recall at the cost of some speed. 
-                
+            k_clusters: number of branches (clusters) to search at each level.
+                This increases recall at the cost of some speed.
+
                 Note: min_distance, max_distance constraints are also applied.
-                    This means there may be less than k_clusters searched at 
-                    each level. We are garunteed to always search at least the 
-                    closest branch above min_distance. Further elements are 
-                    added so long as the k_clusters and max_distance checks 
+                    This means there may be less than k_clusters searched at
+                    each level. We are garunteed to always search at least the
+                    closest branch above min_distance. Further elements are
+                    added so long as the k_clusters and max_distance checks
                     pass.
 
-                    This means each search will fully traverse at least one 
-                    (but at most k_clusters) clusters at each level. 
+                    This means each search will fully traverse at least one
+                    (but at most k_clusters) clusters at each level.
 
         Returns:
             For each element in features_list, return the k-nearest items
@@ -223,7 +223,7 @@ class ClusterIndex(object):
 
 
         """
-        results = self._search(sparse_features=sparse_features, 
+        results = self._search(sparse_features=sparse_features,
                                k=k,
                                min_distance=min_distance,
                                max_distance=max_distance,
@@ -235,4 +235,27 @@ class ClusterIndex(object):
             for result in results:
                 no_distance.append([x for y, x in result])
             return no_distance
-            
+
+    def _print_structure(self, tabs=''):
+        print(tabs + str(self.root.matrix.shape[0]))
+        if not self.is_terminal:
+            for index in self.root.records_data:
+                index.print_structure(tabs + '  ')
+
+    def _max_depth(self):
+        if not self.is_terminal:
+            max_dep = 0
+            for index in self.root.records_data:
+                max_dep = max(max_dep, index._max_depth())
+            return 1 + max_dep
+        else:
+            return 1
+
+    def _matrix_sizes(self, ret=None):
+        if ret is None:
+            ret = []
+        ret.append(len(self.root.records_data))
+        if not self.is_terminal:
+            for index in self.root.records_data:
+                index._matrix_sizes()
+        return ret

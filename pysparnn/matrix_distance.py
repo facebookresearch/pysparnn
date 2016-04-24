@@ -22,7 +22,7 @@ class MatrixMetricSearch(object):
     def __init__(self, sparse_features, records_data):
         """
         Args:
-            sparse_features: A csr_matrix with rows that represent records 
+            sparse_features: A csr_matrix with rows that represent records
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             records_data: Data to return when a doc is matched. Index of
@@ -37,7 +37,7 @@ class MatrixMetricSearch(object):
         Args:
             val: A numeric value to be (potentially transformed).
         Returns:
-            The transformed numeric value. 
+            The transformed numeric value.
         """
         return
 
@@ -77,10 +77,10 @@ class MatrixMetricSearch(object):
 
         dist_matrix = self._distance(sparse_features)
 
-        if min_distance == None:
+        if min_distance is None:
             min_distance = -1 * float("inf")
 
-        if max_distance == None:
+        if max_distance is None:
             max_distance = float("inf")
 
         dist_filter = dist_matrix >= min_distance
@@ -192,6 +192,5 @@ class SlowEuclideanDistance(MatrixMetricSearch):
     def _distance(self, a_matrix):
         """Euclidean distance"""
 
-        return scipy.spatial.distance.cdist(
-                a_matrix.toarray(),
-                self.matrix, 'euclidean')
+        return scipy.spatial.distance.cdist(a_matrix.toarray(), self.matrix,
+                                            'euclidean')
