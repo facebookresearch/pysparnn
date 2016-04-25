@@ -33,7 +33,7 @@ features = csr_matrix(features)
 data_to_return = range(1000)
 cp = snn.ClusterIndex(features, data_to_return)
 
-cp.search(features[:5], k=1, return_metric=False)
+cp.search(features[:5], k=1, return_distance=False)
 >> [[0], [1], [2], [3], [4]]
 ```
 ### Text Example
@@ -73,7 +73,7 @@ search_items = [
 ]
 search_items = dv.transform(search_items)
 
-cp.search(search_items, k=1, k_clusters=2, return_metric=False)
+cp.search(search_items, k=1, k_clusters=2, return_distance=False)
 >> [['oh hello there'], ['Play it again Sam']]
 
 ```
