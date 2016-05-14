@@ -50,30 +50,34 @@ data = [
 ]    
 
 # build a feature representation for each sentence
-def scentence2features(scentence):
-    features = dict()
-    for word in scentence.split():
-        features[word] = 1
-    return features
+def scentences2features(scentences):
+    features_list = []
+    for sentence in sentences:
+        features = dict()
+        for word in scentence.split():
+            features[word] = 1
+        features_list.append(features)
+    return features_list
 
-features_list = []
-for sentence in data:
-    features_list.append(scentence2features(sentence))
+features_list = scentences2features(data)
 
 dv = DictVectorizer()
 dv.fit(features_list)
+features_vec = dv.transform(features_list)
 
 # build the search index!
-cp = snn.ClusterIndex(dv.transform(features_list), data)
+cp = snn.ClusterIndex(features_vec, data)
 
 # search the index with a sparse matrix
-search_items = [
-    scentence2features('oh there'),
-    scentence2features('Play it again Frank')
+search_data = [
+    'oh there',
+    'Play it again Frank'
 ]
-search_items = dv.transform(search_items)
 
-cp.search(search_items, k=1, k_clusters=2, return_distance=False)
+search_features = scentences2features(search_data)
+search_features_vec = dv.transform(search_features)
+
+cp.search(search_features_vec, k=1, k_clusters=2, return_distance=False)
 >> [['oh hello there'], ['Play it again Sam']]
 
 ```
