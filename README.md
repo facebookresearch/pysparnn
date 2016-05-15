@@ -4,7 +4,7 @@ Approximate Nearest Neighbor Search for Sparse Data in Python! This library is w
 Out of the box, PySparNN supports Cosine Distance (i.e. 1 - cosine_similarity).
 
 PySparNN benefits:
- * Designed to be efficent on sparse data (memory & cpu).
+ * Designed to be efficient on sparse data (memory & cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Euclidian, Jaccard, etc.
  * Max distance thresholds can be set at query time (not index time). I.e. return the k closest items no more than max_distance from the query point.
@@ -102,7 +102,7 @@ This breaks up one O(K) search into two O(sqrt(K)) searches which is much much f
 This generalizes to h levels. The runtime becomes:
     O(h * h_root(K))
 
-**Note on min_distance thresholds** - Each document is assigned to the closest candidate cluster. When we set min_distance we will filter out clusters that dont meet that requirement without going into the individual clusters looking for matches. This means that we are likely to miss some good matches along the way since we wont investigate clusters that just miss the cutoff. A (planned) patch for this behavior would be to also search clusters that 'just' miss this cutoff. 
+**Note on min_distance thresholds** - Each document is assigned to the closest candidate cluster. When we set min_distance we will filter out clusters that don't meet that requirement without going into the individual clusters looking for matches. This means that we are likely to miss some good matches along the way since we wont investigate clusters that just miss the cutoff. A (planned) patch for this behavior would be to also search clusters that 'just' miss this cutoff. 
 
 ## Further Information
 http://nlp.stanford.edu/IR-book/html/htmledition/cluster-pruning-1.html
