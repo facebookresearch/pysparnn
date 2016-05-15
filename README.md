@@ -7,7 +7,8 @@ PySparNN benefits:
  * Designed to be efficent on sparse data (memory & cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Euclidian, Jaccard, etc.
- * *beta* - Min, Max distance thresholds can be set at query time (not index time). Example: return the k closest items on the interval [0.8, 0.9] from a query point. 
+ * Max distance thresholds can be set at query time (not index time). I.e. return the k closest items no more than max_distance from the query point.
+ * *beta* - Min distance thresholds set at query time. This will return k items at least some min_disntance away from the query point. Note: Items returned are not likely to be the k **closest** items after the min_distance threshold. See 'How Pysparnn Works' for a more detailed description of this.
 
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
@@ -104,6 +105,8 @@ This breaks up one O(K) search into two O(sqrt(K)) searches which is much much f
 
 This generalizes to h levels. The runtime becomes:
     O(h * h_root(K))
+
+**Note on min_distance thresholds** - Each document is assigned to the closest candiate cluster. When we set min_distance we will filter out clusters that dont meet that requirement without going into the individual clusters looking for matches. This means that we are likely to miss some good matches along the way since we wont investigate clusters that just miss the cutoff. A (planned) patch for this behavior would be to also search clusters that 'just' miss this cutoff. 
 
 ## Further Information
 http://nlp.stanford.edu/IR-book/html/htmledition/cluster-pruning-1.html
