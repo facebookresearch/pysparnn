@@ -47,16 +47,16 @@ data = [
 ]    
 
 # build a feature representation for each sentence
-def scentences2features(scentences):
+def sentences2features(sentences):
     features_list = []
     for sentence in sentences:
         features = dict()
-        for word in scentence.split():
+        for word in sentences.split():
             features[word] = 1
         features_list.append(features)
     return features_list
 
-features_list = scentences2features(data)
+features_list = sentences2features(data)
 
 dv = DictVectorizer()
 dv.fit(features_list)
@@ -71,7 +71,7 @@ search_data = [
     'Play it again Frank'
 ]
 
-search_features = scentences2features(search_data)
+search_features = sentences2features(search_data)
 search_features_vec = dv.transform(search_features)
 
 cp.search(search_features_vec, k=1, k_clusters=2, return_distance=False)
