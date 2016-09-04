@@ -8,7 +8,6 @@ PySparNN benefits:
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Euclidian, Jaccard, etc.
  * Max distance thresholds can be set at query time (not index time). I.e. return the k closest items no more than max_distance from the query point.
- * *beta* - Min distance thresholds set at query time. This will return k items at least some min_disntance away from the query point. Note: Items returned are not likely to be the k **closest** items after the min_distance threshold. See 'How Pysparnn Works' for a more detailed description of this.
 
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~8x faster on their introductory example. 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
