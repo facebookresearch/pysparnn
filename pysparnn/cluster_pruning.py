@@ -21,8 +21,6 @@ def k_best(tuple_list, k):
     Args:
         tuple_list: List of tuples. (distance, value)
         k: Number of tuples to return.
-    Returns:
-        The K-best tuples (distance, value) by distance score.
     """
     tuple_lst = sorted(tuple_list, key=lambda x: x[0],
                        reverse=False)[:k]
@@ -49,10 +47,56 @@ class ClusterIndex(object):
             This generalizes to h levels. The runtime becomes:
                 O(h * h_root(K))
     """
+    def insert(self, sparse_feature, record):
+        nearest = self
+        while not nearest.is_terminal:
+            nearest = nearest.root.nearest_search(sparse_feature, k=1)
+            _, nearest = nearest[0][0]
+
+        cluster_index = nearest
+        parent_index = cluster_index.parent
+        while parent_index and cluster_index.matrix_size * 2 < \
+                len(cluster_index.root.get_records()):
+            cluster_index = parent_index
+            parent_index = cluster_index.parent
+       
+        cluster_index.reindex(sparse_feature, record)
+
+        
+
+    def _get_child_data(self):
+        if self.is_terminal:
+            return [self.root.get_feature_matrix()], [self.root.get_records()]
+        else:
+            result_features = []
+            result_records = []
+    
+            for c in self.root.get_records():
+                features, records = c._get_child_data()
+
+                result_features.extend(features)
+                result_records.extend(records)
+    
+            return result_features, result_records 
+    
+    def reindex(self, sparse_feature=None, record=None):
+        features, records = self._get_child_data()
+
+        flat_rec = []
+        for x in records:
+            flat_rec.extend(x)
+
+        if sparse_feature <> None and record <> None:
+            features.append(sparse_feature)
+            flat_rec.append(record)
+
+        self.__init__(vstack(features), flat_rec, self.distance_type, 
+                self.desired_matrix_size, self.parent)
 
     def __init__(self, sparse_features, records_data,
                  distance_type=pysparnn.matrix_distance.CosineDistance,
-                 matrix_size=None):
+                 matrix_size=None,
+                 parent=None):
         """Create a search index composed of recursively defined sparse
         matricies.
 
@@ -68,6 +112,9 @@ class ClusterIndex(object):
         """
 
         self.is_terminal = False
+        self.parent = parent
+        self.distance_type = distance_type
+        self.desired_matrix_size = matrix_size
         num_records = sparse_features.shape[0]
 
         if matrix_size is None:
@@ -75,7 +122,9 @@ class ClusterIndex(object):
         else:
             matrix_size = int(matrix_size)
 
-        num_levels = np.log(num_records)/np.log(matrix_size)
+        self.matrix_size = matrix_size
+
+        num_levels = np.log(num_records)/np.log(self.matrix_size)
 
         if num_levels <= 1.4:
             self.is_terminal = True
@@ -86,7 +135,7 @@ class ClusterIndex(object):
             records_data = np.array(records_data)
 
             records_index = np.arange(sparse_features.shape[0])
-            clusters_size = min(matrix_size, num_records)
+            clusters_size = min(self.matrix_size, num_records)
             clusters_selection = random.sample(records_index, clusters_size)
             clusters_selection = sparse_features[clusters_selection]
 
@@ -95,7 +144,7 @@ class ClusterIndex(object):
             root = distance_type(clusters_selection,
                                  np.arange(clusters_selection.shape[0]))
 
-            rng_step = matrix_size
+            rng_step = self.matrix_size
             for rng in range(0, sparse_features.shape[0], rng_step):
                 max_rng = min(rng + rng_step, sparse_features.shape[0])
                 records_rng = sparse_features[rng:max_rng]
@@ -111,7 +160,8 @@ class ClusterIndex(object):
                     index = ClusterIndex(vstack(sparse_features[clustr]),
                                          records_data[clustr],
                                          distance_type=distance_type,
-                                         matrix_size=matrix_size)
+                                         matrix_size=self.matrix_size, 
+                                         parent=self)
                     clusters.append(index)
                     cluster_keeps.append(clust_sel)
 
@@ -120,7 +170,7 @@ class ClusterIndex(object):
 
             self.root = distance_type(cluster_keeps, clusters)
 
-    def _search(self, sparse_features, k=1, min_distance=None,
+    def _search(self, sparse_features, k=1, 
                 max_distance=None, k_clusters=1):
         """Find the closest item(s) for each feature_list in.
 
@@ -129,20 +179,14 @@ class ClusterIndex(object):
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             k: Return the k closest results.
-            min_distance: Return items at least min_distance away from the
-                query point. Defaults to any distance.
             max_distance: Return items no more than max_distance away from the
                 query point. Defaults to any distance.
             k_clusters: number of branches (clusters) to search at each level.
                 This increases recall at the cost of some speed.
 
-                Note: min_distance, max_distance constraints are also applied.
+                Note: max_distance constraints are also applied.
                     This means there may be less than k_clusters searched at
-                    each level. We are garunteed to always search at least the
-                    closest branch above min_distance. Further elements are
-                    added so long as the k_clusters and max_distance checks
-                    pass.
-
+                    each level. 
                     This means each search will fully traverse at least one
                     (but at most k_clusters) clusters at each level.
 
@@ -153,9 +197,8 @@ class ClusterIndex(object):
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
         """
         if self.is_terminal:
-            ret = self.root.nearest_search(sparse_features, k=k,
-                                           min_distance=min_distance,
-                                           max_distance=max_distance)
+            return self.root.nearest_search(sparse_features, k=k,
+                                            max_distance=max_distance)
         else:
             ret = []
             nearest = self.root.nearest_search(sparse_features, k=k_clusters)
@@ -164,29 +207,19 @@ class ClusterIndex(object):
                 curr_ret = []
                 for distance, cluster in nearest_clusters:
 
-                    # always return the closest branch above min_distance
-                    # then skip over entries that are not within the distance
-                    empty_results = not len(curr_ret) == 0
-                    min_distance_fail = distance < min_distance
-                    max_distance_fail = distance > max_distance
-                    if (empty_results or min_distance_fail) and\
-                            max_distance_fail:
-                        continue
-
                     cluster_items = cluster.\
                             search(sparse_features[i], k=k,
                                    k_clusters=k_clusters,
-                                   min_distance=min_distance,
                                    max_distance=max_distance)
 
                     for elements in cluster_items:
                         if len(elements) > 0:
                             curr_ret.extend(elements)
                 ret.append(k_best(curr_ret, k))
-        return ret
+            return ret
 
-    def search(self, sparse_features, k=1, min_distance=None,
-               max_distance=None, k_clusters=1, return_distance=True):
+    def search(self, sparse_features, k=1, max_distance=None, k_clusters=1, 
+            return_distance=True):
         """Find the closest item(s) for each feature_list in.
 
         Args:
@@ -194,19 +227,14 @@ class ClusterIndex(object):
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             k: Return the k closest results.
-            min_distance: Return items at least min_distance away from the
-                query point. Defaults to any distance.
             max_distance: Return items no more than max_distance away from the
                 query point. Defaults to any distance.
             k_clusters: number of branches (clusters) to search at each level.
                 This increases recall at the cost of some speed.
 
-                Note: min_distance, max_distance constraints are also applied.
+                Note: max_distance constraints are also applied.
                     This means there may be less than k_clusters searched at
-                    each level. We are garunteed to always search at least the
-                    closest branch above min_distance. Further elements are
-                    added so long as the k_clusters and max_distance checks
-                    pass.
+                    each level. 
 
                     This means each search will fully traverse at least one
                     (but at most k_clusters) clusters at each level.
@@ -223,11 +251,12 @@ class ClusterIndex(object):
 
 
         """
+
         results = self._search(sparse_features=sparse_features,
                                k=k,
-                               min_distance=min_distance,
                                max_distance=max_distance,
                                k_clusters=k_clusters)
+
         if return_distance:
             return results
         else:
@@ -257,5 +286,5 @@ class ClusterIndex(object):
         ret.append(len(self.root.records_data))
         if not self.is_terminal:
             for index in self.root.records_data:
-                index._matrix_sizes()
+                ret.extend(index._matrix_sizes())
         return ret

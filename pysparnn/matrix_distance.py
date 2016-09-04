@@ -31,6 +31,12 @@ class MatrixMetricSearch(object):
         self.matrix = sparse_features
         self.records_data = np.array(records_data)
 
+    def get_feature_matrix(self):
+        return self.matrix
+
+    def get_records(self):
+        return self.records_data
+
     @abc.abstractmethod
     def _transform_value(self, val):
         """
@@ -54,8 +60,7 @@ class MatrixMetricSearch(object):
         """
         return
 
-    def nearest_search(self, sparse_features, k=1, min_distance=None,
-                       max_distance=None):
+    def nearest_search(self, sparse_features, k=1, max_distance=None):
         """Find the closest item(s) for each set of features in features_list.
 
         Args:
@@ -63,8 +68,6 @@ class MatrixMetricSearch(object):
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             k: Return the k closest results.
-            min_distance: Return items at least min_distance from the query
-                point.
             max_distance: Return items at most max_distance from the query
                 point.
 
@@ -77,14 +80,10 @@ class MatrixMetricSearch(object):
 
         dist_matrix = self._distance(sparse_features)
 
-        if min_distance is None:
-            min_distance = -1 * float("inf")
-
         if max_distance is None:
             max_distance = float("inf")
 
-        dist_filter = dist_matrix >= min_distance
-        dist_filter &= (dist_matrix <= max_distance)
+        dist_filter = (dist_matrix <= max_distance)
 
         ret = []
         for i in range(dist_matrix.shape[0]):
