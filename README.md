@@ -36,7 +36,7 @@ cp.search(features[:5], k=1, return_distance=False)
 ```python
 import pysparnn as snn
 
-from sklearn.feature_extraction import DictVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 data = [
     'hello world',
@@ -45,21 +45,10 @@ data = [
     'Play it again Sam',
 ]    
 
-# build a feature representation for each sentence
-def sentences2features(sentences):
-    features_list = []
-    for sentence in sentences:
-        features = dict()
-        for word in sentences.split():
-            features[word] = 1
-        features_list.append(features)
-    return features_list
+tv = TfidfVectorizer()
+tv.fit(data)
 
-features_list = sentences2features(data)
-
-dv = DictVectorizer()
-dv.fit(features_list)
-features_vec = dv.transform(features_list)
+features_vec = tv.transform(data)
 
 # build the search index!
 cp = snn.ClusterIndex(features_vec, data)
@@ -70,8 +59,7 @@ search_data = [
     'Play it again Frank'
 ]
 
-search_features = sentences2features(search_data)
-search_features_vec = dv.transform(search_features)
+search_features_vec = tv.transform(search_data)
 
 cp.search(search_features_vec, k=1, k_clusters=2, return_distance=False)
 >> [['oh hello there'], ['Play it again Sam']]
