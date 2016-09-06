@@ -48,6 +48,13 @@ class ClusterIndex(object):
                 O(h * h_root(K))
     """
     def insert(self, sparse_feature, record):
+        """Insert a single record into the index.
+        
+        Args:
+            sparse_feature: sparse feature vector
+            record: record to return as the result of a search
+        """
+        
         nearest = self
         while not nearest.is_terminal:
             nearest = nearest.root.nearest_search(sparse_feature, k=1)
@@ -251,11 +258,20 @@ class ClusterIndex(object):
 
 
         """
+        
+        # search no more than 1k records at once
+        # helps keap the matrix multiplies small
+        batch_size = 1000
+        results = []
+        rng_step = batch_size
+        for rng in range(0, sparse_features.shape[0], rng_step):
+            max_rng = min(rng + rng_step, sparse_features.shape[0])
+            records_rng = sparse_features[rng:max_rng]
 
-        results = self._search(sparse_features=sparse_features,
-                               k=k,
-                               max_distance=max_distance,
-                               k_clusters=k_clusters)
+            results.extend(self._search(sparse_features=records_rng,
+                                        k=k,
+                                        max_distance=max_distance,
+                                        k_clusters=k_clusters))
 
         if return_distance:
             return results
