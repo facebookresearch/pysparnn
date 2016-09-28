@@ -94,7 +94,13 @@ class MatrixMetricSearch(object):
             scores = dist_matrix[i][index]
             records = self.records_data[index]
 
-            arg_index = np.argsort(scores)[:k]
+            if scores.sum() < 0.0001 and len(scores) > 0:
+                # they are all practically the same
+                # we have to do this to prevent infinite recursion
+                # TODO: would love an alternative solution, this is a critical loop
+                arg_index = np.random.choice(len(scores), k, replace=False)
+            else:
+                arg_index = np.argsort(scores)[:k]
 
             curr_ret = zip(scores[arg_index], records[arg_index])
 
