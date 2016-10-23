@@ -68,7 +68,7 @@ cp.search(search_features_vec, k=1, k_clusters=2, return_distance=False)
 ```
 
 ## Requirements
-PySparNN requires numpy and scipy. Tested with numpy 1.10.4 and scipy 0.17.0.
+PySparNN requires numpy and scipy. Tested with numpy 1.11.2 and scipy 0.18.1.
 
 ## Installation
 ```bash
