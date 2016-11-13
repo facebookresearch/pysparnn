@@ -28,7 +28,7 @@ features = csr_matrix(features)
 
 # build the search index!
 data_to_return = range(1000)
-cp = snn.ClusterIndex(features, data_to_return)
+cp = snn.MultiClusterIndex(features, data_to_return)
 
 cp.search(features[:5], k=1, return_distance=False)
 >> [[0], [1], [2], [3], [4]]
@@ -52,7 +52,7 @@ tv.fit(data)
 features_vec = tv.transform(data)
 
 # build the search index!
-cp = snn.ClusterIndex(features_vec, data)
+cp = snn.MultiClusterIndex(features_vec, data)
 
 # search the index with a sparse matrix
 search_data = [
