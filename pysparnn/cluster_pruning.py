@@ -105,7 +105,7 @@ class ClusterIndex(object):
         num_records = sparse_features.shape[0]
 
         if matrix_size is None:
-            matrix_size = max(int(np.sqrt(num_records)), 100)
+            matrix_size = max(int(np.sqrt(num_records)), 1000)
         else:
             matrix_size = int(matrix_size)
 
