@@ -80,16 +80,16 @@ python setup.py install
 ```
 
 ## How PySparNN works
-Searching for a document in an collection of K documents is naively O(K) (assuming documents are constant sized). 
+Searching for a document in an collection of D documents is naively O(D) (assuming documents are constant sized). 
 
-However! we can create a tree structure where the first level is O(sqrt(K)) and each of the leaves are also O(sqrt(K)) - on average.
+However! we can create a tree structure where the first level is O(sqrt(D)) and each of the leaves are also O(sqrt(D)) - on average.
 
-We randomly pick sqrt(K) candidate items to be in the top level. Then -- each document in the full list of K documents is assigned to the closest candidate in the top level.
+We randomly pick sqrt(D) candidate items to be in the top level. Then -- each document in the full list of D documents is assigned to the closest candidate in the top level.
 
-This breaks up one O(K) search into two O(sqrt(K)) searches which is much much faster when K is big!
+This breaks up one O(D) search into two O(sqrt(D)) searches which is much much faster when K is big!
 
 This generalizes to h levels. The runtime becomes:
-    O(h * h_root(K))
+    O(h * h_root(D))
 
 **Note on min_distance thresholds** - Each document is assigned to the closest candidate cluster. When we set min_distance we will filter out clusters that don't meet that requirement without going into the individual clusters looking for matches. This means that we are likely to miss some good matches along the way since we wont investigate clusters that just miss the cutoff. A (planned) patch for this behavior would be to also search clusters that 'just' miss this cutoff. 
 
