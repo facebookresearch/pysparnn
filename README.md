@@ -86,7 +86,7 @@ However! we can create a tree structure where the first level is O(sqrt(D)) and 
 
 We randomly pick sqrt(D) candidate items to be in the top level. Then -- each document in the full list of D documents is assigned to the closest candidate in the top level.
 
-This breaks up one O(D) search into two O(sqrt(D)) searches which is much much faster when K is big!
+This breaks up one O(D) search into two O(sqrt(D)) searches which is much much faster when D is big!
 
 This generalizes to h levels. The runtime becomes:
     O(h * h_root(D))
