@@ -16,19 +16,19 @@ import scipy.sparse
 import scipy.spatial.distance
 
 class MatrixMetricSearch(object):
-    """A sparse matrix representation out of features."""
+    """A matrix representation out of features."""
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, sparse_features, records_data):
+    def __init__(self, features, records_data):
         """
         Args:
-            sparse_features: A csr_matrix with rows that represent records
+            features: A matrix with rows that represent records
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             records_data: Data to return when a doc is matched. Index of
-                corresponds to sparse_features.
+                corresponds to features.
         """
-        self.matrix = sparse_features
+        self.matrix = features
         self.records_data = np.array(records_data)
 
     def get_feature_matrix(self):
@@ -36,6 +36,28 @@ class MatrixMetricSearch(object):
 
     def get_records(self):
         return self.records_data
+
+    @staticmethod
+    @abc.abstractmethod
+    def features_to_matrix(features):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return
+
+    @staticmethod
+    @abc.abstractmethod
+    def vstack(matrix_list):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return
 
     @abc.abstractmethod
     def _transform_value(self, val):
@@ -51,20 +73,20 @@ class MatrixMetricSearch(object):
     def _distance(self, a_matrix):
         """
         Args:
-            a_matrix: A csr_matrix with rows that represent records
+            a_matrix: A matrix with rows that represent records
                 to search against.
             records_data: Data to return when a doc is matched. Index of
-                corresponds to sparse_features.
+                corresponds to features.
         Returns:
             A dense array representing distance.
         """
         return
 
-    def nearest_search(self, sparse_features, k=1, max_distance=None):
+    def nearest_search(self, features, k=1, max_distance=None):
         """Find the closest item(s) for each set of features in features_list.
 
         Args:
-            sparse_features: A csr_matrix with rows that represent records
+            features: A matrix with rows that represent records
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
             k: Return the k closest results.
@@ -78,7 +100,7 @@ class MatrixMetricSearch(object):
              [(score2_1, item2_1), ..., (score2_k, item2_k)], ...]
         """
 
-        dist_matrix = self._distance(sparse_features)
+        dist_matrix = self._distance(features)
 
         if max_distance is None:
             max_distance = float("inf")
@@ -118,13 +140,33 @@ class CosineDistance(MatrixMetricSearch):
     and distance metrics can be treated the same way.
     """
 
-    def __init__(self, sparse_features, records_data):
-        super(CosineDistance, self).__init__(sparse_features, records_data)
+    def __init__(self, features, records_data):
+        super(CosineDistance, self).__init__(features, records_data)
 
         m_c = self.matrix.copy()
         m_c.data **= 2
         self.matrix_root_sum_square = \
                 np.sqrt(np.asarray(m_c.sum(axis=1)).reshape(-1))
+
+    @staticmethod
+    def features_to_matrix(features):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return scipy.sparse.csr_matrix(features)
+
+    @staticmethod
+    def vstack(matrix_list):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return scipy.sparse.vstack(matrix_list)
 
     def _transform_value(self, v):
         return v
@@ -159,10 +201,30 @@ class UnitCosineDistance(MatrixMetricSearch):
       * 1**2 == 1 so that operation can be skipped
     """
 
-    def __init__(self, sparse_features, records_data):
-        super(UnitCosineDistance, self).__init__(sparse_features, records_data)
+    def __init__(self, features, records_data):
+        super(UnitCosineDistance, self).__init__(features, records_data)
         self.matrix_root_sum_square = \
                 np.sqrt(np.asarray(self.matrix.sum(axis=1)).reshape(-1))
+
+    @staticmethod
+    def features_to_matrix(features):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return scipy.sparse.csr_matrix(features)
+
+    @staticmethod
+    def vstack(matrix_list):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return scipy.sparse.vstack(matrix_list)
 
     def _transform_value(self, v):
         return 1
@@ -186,10 +248,29 @@ class SlowEuclideanDistance(MatrixMetricSearch):
     WARNING: This is not optimized.
     """
 
-    def __init__(self, sparse_features, records_data):
-        super(SlowEuclideanDistance, self).__init__(sparse_features,
-                                                    records_data)
-        self.matrix = self.matrix.toarray()
+    def __init__(self, features, records_data):
+        super(SlowEuclideanDistance, self).__init__(features, records_data)
+        self.matrix = self.matrix
+
+    @staticmethod
+    def features_to_matrix(features):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return np.array(features, ndmin=2)
+
+    @staticmethod
+    def vstack(matrix_list):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return np.vstack(matrix_list)
 
     def _transform_value(self, v):
         return v
@@ -197,5 +278,56 @@ class SlowEuclideanDistance(MatrixMetricSearch):
     def _distance(self, a_matrix):
         """Euclidean distance"""
 
-        return scipy.spatial.distance.cdist(a_matrix.toarray(), self.matrix,
-                                            'euclidean')
+        return scipy.spatial.distance.cdist(a_matrix, self.matrix, 'euclidean')
+
+class DenseCosineDistance(MatrixMetricSearch):
+    """A matrix that implements cosine distance search against it.
+
+    cosine_distance = 1 - cosine_similarity
+
+    Note: We want items that are more similar to be closer to zero so we are
+    going to instead return 1 - cosine_similarity. We do this so similarity
+    and distance metrics can be treated the same way.
+    """
+
+    def __init__(self, features, records_data):
+        super(DenseCosineDistance, self).__init__(features, records_data)
+
+        self.matrix_root_sum_square = \
+                np.sqrt((self.matrix**2).sum(axis=1).reshape(-1))
+
+    @staticmethod
+    def features_to_matrix(features):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return np.array(features, ndmin=2)
+
+    @staticmethod
+    def vstack(matrix_list):
+        """
+        Args:
+            val: A list of features to be formatted.
+        Returns:
+            The transformed matrix.
+        """
+        return np.vstack(matrix_list)
+
+    def _transform_value(self, v):
+        return v
+
+    def _distance(self, a_matrix):
+        """Vectorised cosine distance"""
+        # what is the implmentation of transpose? can i change the order?
+        dprod = self.matrix.dot(a_matrix.transpose()).transpose() * 1.0
+
+        a_root_sum_square = (a_matrix**2).sum(axis=1).reshape(-1)
+        a_root_sum_square = a_root_sum_square.reshape(len(a_root_sum_square), 1)
+        a_root_sum_square = np.sqrt(a_root_sum_square)
+
+        magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
+
+        return 1 - (dprod * magnitude)
