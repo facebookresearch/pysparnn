@@ -13,7 +13,7 @@ PySparNN benefits:
 If your data is NOT SPARSE - please consider [annoy](https://github.com/spotify/annoy). Annoy uses a similar-ish method and I am a big fan of it. As of this writing, annoy performs ~6x faster on their introductory example (vs dense matrix). 
 General rule of thumb - annoy performs better if you can get your data to fit into memory (as a dense vector).
 
-The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~3x faster on the 20newsgroups dataset. A more robust benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/examples/sparse_search_comparison.ipynb) [Here is another comparison](https://github.com/facebookresearch/pysparnn/blob/master/examples/enron.ipynb) on the larger Enron email dataset.
+The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~3x faster on the 20newsgroups dataset (as a sparse vector). A more robust benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/examples/sparse_search_comparison.ipynb) [Here is another comparison](https://github.com/facebookresearch/pysparnn/blob/master/examples/enron.ipynb) on the larger Enron email dataset.
 
 
 ## Example Usage
