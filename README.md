@@ -10,9 +10,9 @@ PySparNN benefits:
  * Max distance thresholds can be set at query time (not index time). I.e. return the k closest items no more than max_distance from the query point.
  * Supports incremental insertion of elements.
 
-If your data is NOT SPARSE - please consider [fiass](https://github.com/facebookresearch/faiss) or [annoy](https://github.com/spotify/annoy). They use similar methods and I am a big fan of both. You should expect better performance on dense vectors from both of those projects.
+If your data is NOT SPARSE - please consider [faiss](https://github.com/facebookresearch/faiss) or [annoy](https://github.com/spotify/annoy). They use similar methods and I am a big fan of both. You should expect better performance on dense vectors from both of those projects.
 
-The most comparable library to PySparNN is scikit-learn's LSHForrest module. As of this writing, PySparNN is ~4x faster on the 20newsgroups dataset (as a sparse vector). A more robust benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/examples/sparse_search_comparison.ipynb) [Here is another comparison](https://github.com/facebookresearch/pysparnn/blob/master/examples/enron.ipynb) on the larger Enron email dataset.
+The most comparable library to PySparNN is scikit-learn's LSHForest module. As of this writing, PySparNN is ~4x faster on the 20newsgroups dataset (as a sparse vector). A more robust benchmarking on sparse data is desired. [Here is the comparison.](https://github.com/facebookresearch/pysparnn/blob/master/examples/sparse_search_comparison.ipynb) [Here is another comparison](https://github.com/facebookresearch/pysparnn/blob/master/examples/enron.ipynb) on the larger Enron email dataset.
 
 
 ## Example Usage
