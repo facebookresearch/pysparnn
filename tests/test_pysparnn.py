@@ -7,7 +7,7 @@
 """Test pysparn search"""
 
 import unittest
-import pysparnn.cluster_pruning as cp
+import pysparnn.cluster_index as ci
 import numpy as np
 from scipy.sparse import csr_matrix
 from pysparnn.matrix_distance import SlowEuclideanDistance
@@ -29,7 +29,7 @@ class PysparnnTest(unittest.TestCase):
         features = [dict([(x, 1) for x in f.split()]) for f in data]
         features = DictVectorizer().fit_transform(features)
 
-        cluster_index = cp.ClusterIndex(features, data)
+        cluster_index = ci.ClusterIndex(features, data)
 
         ret = cluster_index.search(features, k=1, k_clusters=1,
                                    return_distance=False)
@@ -47,7 +47,7 @@ class PysparnnTest(unittest.TestCase):
         features = [dict([(x, 1) for x in f.split()]) for f in data]
         features = DictVectorizer().fit_transform(features)
         features = features.toarray()
-        cluster_index = cp.ClusterIndex(features, data)
+        cluster_index = ci.ClusterIndex(features, data)
 
         ret = cluster_index.search(features, k=1, k_clusters=1,
                                    return_distance=False)
@@ -65,7 +65,7 @@ class PysparnnTest(unittest.TestCase):
         features = [dict([(x, 1) for x in f.split()]) for f in data]
         features = DictVectorizer().fit_transform(features)
         features = features.toarray()
-        cluster_index = cp.ClusterIndex(features, data, DenseCosineDistance)
+        cluster_index = ci.ClusterIndex(features, data, DenseCosineDistance)
 
         ret = cluster_index.search(features, k=1, k_clusters=1,
                                    return_distance=False)
@@ -83,7 +83,7 @@ class PysparnnTest(unittest.TestCase):
         features = [dict([(x, 1) for x in f.split()]) for f in data]
         features = DictVectorizer().fit_transform(features)
         features = features.toarray()
-        cluster_index = cp.ClusterIndex(features, data, SlowEuclideanDistance)
+        cluster_index = ci.ClusterIndex(features, data, SlowEuclideanDistance)
 
         ret = cluster_index.search(features, k=1, k_clusters=1,
                                    return_distance=False)
@@ -100,7 +100,7 @@ class PysparnnTest(unittest.TestCase):
         data_to_return = list(range(1000))
 
         # matrix size smaller - this forces the index to have multiple levels
-        cluster_index = cp.ClusterIndex(features, data_to_return,
+        cluster_index = ci.ClusterIndex(features, data_to_return,
                                        matrix_size=10)
 
         ret =  cluster_index.search(features[0:10], k=1, k_clusters=1,
@@ -116,7 +116,7 @@ class PysparnnTest(unittest.TestCase):
         data_to_return = list(range(1000))
 
         # matrix size smaller - this forces the index to have multiple levels
-        cluster_index = cp.MultiClusterIndex(features, data_to_return,
+        cluster_index = ci.MultiClusterIndex(features, data_to_return,
                                        matrix_size=10)
 
         ret =  cluster_index.search(features[0:10], k=1, k_clusters=1,
