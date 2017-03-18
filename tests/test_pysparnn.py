@@ -97,7 +97,7 @@ class PysparnnTest(unittest.TestCase):
         features = csr_matrix(features)
 
         # build the search index!
-        data_to_return = range(1000)
+        data_to_return = list(range(1000))
 
         # matrix size smaller - this forces the index to have multiple levels
         cluster_index = cp.ClusterIndex(features, data_to_return,
@@ -113,7 +113,7 @@ class PysparnnTest(unittest.TestCase):
         features = csr_matrix(features)
 
         # build the search index!
-        data_to_return = range(1000)
+        data_to_return = list(range(1000))
 
         # matrix size smaller - this forces the index to have multiple levels
         cluster_index = cp.MultiClusterIndex(features, data_to_return,

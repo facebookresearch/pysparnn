@@ -12,5 +12,8 @@ def recall(query, full_set):
         result = 0.0
         for r in np.unique(r_items):
             result += 1 if r in t_items else 0
-        ret.append(result / len(t_items))
+        if len(t_items) > 0:
+            ret.append(result / len(t_items))
+        else:
+            ret.append(0.0)
     return np.array(ret)

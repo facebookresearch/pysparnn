@@ -10,14 +10,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import abc
-import numpy as np
-import scipy.sparse
-import scipy.spatial.distance
+import abc as _abc
+import numpy as _np
+import scipy.sparse as _sparse
+import scipy.spatial.distance as _spatial_distance
 
 class MatrixMetricSearch(object):
     """A matrix representation out of features."""
-    __metaclass__ = abc.ABCMeta
+    __metaclass__ = _abc.ABCMeta
 
     def __init__(self, features, records_data):
         """
@@ -29,7 +29,7 @@ class MatrixMetricSearch(object):
                 corresponds to features.
         """
         self.matrix = features
-        self.records_data = np.array(records_data)
+        self.records_data = _np.array(records_data)
 
     def get_feature_matrix(self):
         return self.matrix
@@ -38,7 +38,7 @@ class MatrixMetricSearch(object):
         return self.records_data
 
     @staticmethod
-    @abc.abstractmethod
+    @_abc.abstractmethod
     def features_to_matrix(features):
         """
         Args:
@@ -49,7 +49,7 @@ class MatrixMetricSearch(object):
         return
 
     @staticmethod
-    @abc.abstractmethod
+    @_abc.abstractmethod
     def vstack(matrix_list):
         """
         Args:
@@ -59,7 +59,7 @@ class MatrixMetricSearch(object):
         """
         return
 
-    @abc.abstractmethod
+    @_abc.abstractmethod
     def _transform_value(self, val):
         """
         Args:
@@ -69,7 +69,7 @@ class MatrixMetricSearch(object):
         """
         return
 
-    @abc.abstractmethod
+    @_abc.abstractmethod
     def _distance(self, a_matrix):
         """
         Args:
@@ -119,12 +119,15 @@ class MatrixMetricSearch(object):
             if scores.sum() < 0.0001 and len(scores) > 0:
                 # they are all practically the same
                 # we have to do this to prevent infinite recursion
-                # TODO: would love an alternative solution, this is a critical loop
-                arg_index = np.random.choice(len(scores), k, replace=False)
+                # TODO: would love an alternative solution, this is a critical
+                # loop
+                lenScores = len(scores)
+                arg_index = _np.random.choice(lenScores, min(lenScores, k), 
+                                              replace=False)
             else:
-                arg_index = np.argsort(scores)[:k]
+                arg_index = _np.argsort(scores)[:k]
 
-            curr_ret = zip(scores[arg_index], records[arg_index])
+            curr_ret = list(zip(scores[arg_index], records[arg_index]))
 
             ret.append(curr_ret)
 
@@ -146,7 +149,7 @@ class CosineDistance(MatrixMetricSearch):
         m_c = self.matrix.copy()
         m_c.data **= 2
         self.matrix_root_sum_square = \
-                np.sqrt(np.asarray(m_c.sum(axis=1)).reshape(-1))
+                _np.sqrt(_np.asarray(m_c.sum(axis=1)).reshape(-1))
 
     @staticmethod
     def features_to_matrix(features):
@@ -156,7 +159,7 @@ class CosineDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return scipy.sparse.csr_matrix(features)
+        return _sparse.csr_matrix(features)
 
     @staticmethod
     def vstack(matrix_list):
@@ -166,7 +169,7 @@ class CosineDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return scipy.sparse.vstack(matrix_list)
+        return _sparse.vstack(matrix_list)
 
     def _transform_value(self, v):
         return v
@@ -178,10 +181,10 @@ class CosineDistance(MatrixMetricSearch):
 
         a_c = a_matrix.copy()
         a_c.data **= 2
-        a_root_sum_square = np.asarray(a_c.sum(axis=1)).reshape(-1)
+        a_root_sum_square = _np.asarray(a_c.sum(axis=1)).reshape(-1)
         a_root_sum_square = \
                 a_root_sum_square.reshape(len(a_root_sum_square), 1)
-        a_root_sum_square = np.sqrt(a_root_sum_square)
+        a_root_sum_square = _np.sqrt(a_root_sum_square)
 
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 
@@ -204,7 +207,7 @@ class UnitCosineDistance(MatrixMetricSearch):
     def __init__(self, features, records_data):
         super(UnitCosineDistance, self).__init__(features, records_data)
         self.matrix_root_sum_square = \
-                np.sqrt(np.asarray(self.matrix.sum(axis=1)).reshape(-1))
+                _np.sqrt(_np.asarray(self.matrix.sum(axis=1)).reshape(-1))
 
     @staticmethod
     def features_to_matrix(features):
@@ -214,7 +217,7 @@ class UnitCosineDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return scipy.sparse.csr_matrix(features)
+        return _sparse.csr_matrix(features)
 
     @staticmethod
     def vstack(matrix_list):
@@ -224,7 +227,7 @@ class UnitCosineDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return scipy.sparse.vstack(matrix_list)
+        return _sparse.vstack(matrix_list)
 
     def _transform_value(self, v):
         return 1
@@ -234,10 +237,10 @@ class UnitCosineDistance(MatrixMetricSearch):
         # what is the implmentation of transpose? can i change the order?
         dprod = self.matrix.dot(a_matrix.transpose()).transpose() * 1.0
 
-        a_root_sum_square = np.asarray(a_matrix.sum(axis=1)).reshape(-1)
+        a_root_sum_square = _np.asarray(a_matrix.sum(axis=1)).reshape(-1)
         a_root_sum_square = \
                 a_root_sum_square.reshape(len(a_root_sum_square), 1)
-        a_root_sum_square = np.sqrt(a_root_sum_square)
+        a_root_sum_square = _np.sqrt(a_root_sum_square)
 
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 
@@ -260,7 +263,7 @@ class SlowEuclideanDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return np.array(features, ndmin=2)
+        return _np.array(features, ndmin=2)
 
     @staticmethod
     def vstack(matrix_list):
@@ -270,7 +273,7 @@ class SlowEuclideanDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return np.vstack(matrix_list)
+        return _np.vstack(matrix_list)
 
     def _transform_value(self, v):
         return v
@@ -278,7 +281,7 @@ class SlowEuclideanDistance(MatrixMetricSearch):
     def _distance(self, a_matrix):
         """Euclidean distance"""
 
-        return scipy.spatial.distance.cdist(a_matrix, self.matrix, 'euclidean')
+        return _spatial_distance.cdist(a_matrix, self.matrix, 'euclidean')
 
 class DenseCosineDistance(MatrixMetricSearch):
     """A matrix that implements cosine distance search against it.
@@ -294,7 +297,7 @@ class DenseCosineDistance(MatrixMetricSearch):
         super(DenseCosineDistance, self).__init__(features, records_data)
 
         self.matrix_root_sum_square = \
-                np.sqrt((self.matrix**2).sum(axis=1).reshape(-1))
+                _np.sqrt((self.matrix**2).sum(axis=1).reshape(-1))
 
     @staticmethod
     def features_to_matrix(features):
@@ -304,7 +307,7 @@ class DenseCosineDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return np.array(features, ndmin=2)
+        return _np.array(features, ndmin=2)
 
     @staticmethod
     def vstack(matrix_list):
@@ -314,7 +317,7 @@ class DenseCosineDistance(MatrixMetricSearch):
         Returns:
             The transformed matrix.
         """
-        return np.vstack(matrix_list)
+        return _np.vstack(matrix_list)
 
     def _transform_value(self, v):
         return v
@@ -326,7 +329,7 @@ class DenseCosineDistance(MatrixMetricSearch):
 
         a_root_sum_square = (a_matrix**2).sum(axis=1).reshape(-1)
         a_root_sum_square = a_root_sum_square.reshape(len(a_root_sum_square), 1)
-        a_root_sum_square = np.sqrt(a_root_sum_square)
+        a_root_sum_square = _np.sqrt(a_root_sum_square)
 
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 

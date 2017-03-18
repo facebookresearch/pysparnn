@@ -10,12 +10,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-import collections
-import random
-import numpy as np
+import collections as _collections
+import random as _random
+import numpy as _np
 import pysparnn.matrix_distance
 
-def k_best(tuple_list, k):
+def _k_best(tuple_list, k):
     """For a list of tuples [(distance, value), ...] - Get the k-best tuples by
     distance.
     Args:
@@ -27,7 +27,7 @@ def k_best(tuple_list, k):
 
     return tuple_lst
 
-def filter_unique(tuple_list):
+def _filter_unique(tuple_list):
     """For a list of tuples [(distance, value), ...] - filter out duplicate
     values.
     Args:
@@ -43,7 +43,7 @@ def filter_unique(tuple_list):
     return ret
 
 
-def filter_distance(results, return_distance):
+def _filter_distance(results, return_distance):
     """For a list of tuples [(distance, value), ...] - optionally filter out
     the distance elements.
     Args:
@@ -105,30 +105,30 @@ class ClusterIndex(object):
         num_records = features.shape[0]
 
         if matrix_size is None:
-            matrix_size = max(int(np.sqrt(num_records)), 1000)
+            matrix_size = max(int(_np.sqrt(num_records)), 1000)
         else:
             matrix_size = int(matrix_size)
 
         self.matrix_size = matrix_size
 
-        num_levels = np.log(num_records)/np.log(self.matrix_size)
+        num_levels = _np.log(num_records)/_np.log(self.matrix_size)
 
         if num_levels <= 1.4:
             self.is_terminal = True
             self.root = distance_type(features, records_data)
         else:
             self.is_terminal = False
-            records_data = np.array(records_data)
+            records_data = _np.array(records_data)
 
-            records_index = np.arange(features.shape[0])
+            records_index = list(_np.arange(features.shape[0]))
             clusters_size = min(self.matrix_size, num_records)
-            clusters_selection = random.sample(records_index, clusters_size)
+            clusters_selection = _random.sample(records_index, clusters_size)
             clusters_selection = features[clusters_selection]
 
-            item_to_clusters = collections.defaultdict(list)
+            item_to_clusters = _collections.defaultdict(list)
 
             root = distance_type(clusters_selection,
-                                 np.arange(clusters_selection.shape[0]))
+                                 list(_np.arange(clusters_selection.shape[0])))
 
             rng_step = self.matrix_size
             for rng in range(0, features.shape[0], rng_step):
@@ -143,8 +143,7 @@ class ClusterIndex(object):
             for k, clust_sel in enumerate(clusters_selection):
                 clustr = item_to_clusters[k]
                 if len(clustr) > 0:
-                    index = ClusterIndex(
-                                         self.distance_type.vstack(features[clustr]),
+                    index = ClusterIndex(self.distance_type.vstack(features[clustr]),
                                          records_data[clustr],
                                          distance_type=distance_type,
                                          matrix_size=self.matrix_size,
@@ -154,7 +153,7 @@ class ClusterIndex(object):
                     cluster_keeps.append(clust_sel)
 
             cluster_keeps = self.distance_type.vstack(cluster_keeps)
-            clusters = np.array(clusters)
+            clusters = _np.array(clusters)
 
             self.root = distance_type(cluster_keeps, clusters)
 
@@ -220,7 +219,7 @@ class ClusterIndex(object):
         for x in records:
             flat_rec.extend(x)
 
-        if feature <> None and record <> None:
+        if feature is not None and record is not None:
             features.append(feature)
             flat_rec.append(record)
 
@@ -273,7 +272,7 @@ class ClusterIndex(object):
                     for elements in cluster_items:
                         if len(elements) > 0:
                             curr_ret.extend(elements)
-                ret.append(k_best(curr_ret, k))
+                ret.append(_k_best(curr_ret, k))
             return ret
 
     def search(self, features, k=1, max_distance=None, k_clusters=1,
@@ -323,7 +322,7 @@ class ClusterIndex(object):
                                         max_distance=max_distance,
                                         k_clusters=k_clusters))
 
-        return [filter_distance(res, return_distance) for res in results]
+        return [_filter_distance(res, return_distance) for res in results]
 
     def _print_structure(self, tabs=''):
         """Pretty print the tree index structure's matrix sizes"""
@@ -492,10 +491,10 @@ class MultiClusterIndex(object):
             results.append(ind.search(features, k, max_distance,
                                       k_clusters, True))
         ret = []
-        for r in np.hstack(results):
+        for r in _np.hstack(results):
             ret.append(
-                filter_distance(
-                    k_best(filter_unique(r), k),
+                _filter_distance(
+                    _k_best(_filter_unique(r), k),
                     return_distance
                 )
             )
