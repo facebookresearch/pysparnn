@@ -18,7 +18,7 @@ The most comparable library to PySparNN is scikit-learn's LSHForest module. As o
 ## Example Usage
 ### Simple Example
 ```python
-import pysparnn as snn
+import pysparnn.cluster_index as ci
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -28,14 +28,14 @@ features = csr_matrix(features)
 
 # build the search index!
 data_to_return = range(1000)
-cp = snn.MultiClusterIndex(features, data_to_return)
+cp = ci.MultiClusterIndex(features, data_to_return)
 
 cp.search(features[:5], k=1, return_distance=False)
 >> [[0], [1], [2], [3], [4]]
 ```
 ### Text Example
 ```python
-import pysparnn as snn
+import pysparnn.cluster_index as ci
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -52,7 +52,7 @@ tv.fit(data)
 features_vec = tv.transform(data)
 
 # build the search index!
-cp = snn.MultiClusterIndex(features_vec, data)
+cp = ci.MultiClusterIndex(features_vec, data)
 
 # search the index with a sparse matrix
 search_data = [
