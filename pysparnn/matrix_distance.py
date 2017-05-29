@@ -82,16 +82,13 @@ class MatrixMetricSearch(object):
         """
         return
 
-    def nearest_search(self, features, k=1, max_distance=None):
+    def nearest_search(self, features):
         """Find the closest item(s) for each set of features in features_list.
 
         Args:
             features: A matrix with rows that represent records
                 (corresponding to the elements in records_data) and columns
                 that describe a point in space for each row.
-            k: Return the k closest results.
-            max_distance: Return items at most max_distance from the query
-                point.
 
         Returns:
             For each element in features_list, return the k-nearest items
@@ -102,36 +99,42 @@ class MatrixMetricSearch(object):
 
         dist_matrix = self._distance(features)
 
-        if max_distance is None:
-            max_distance = float("inf")
-
-        dist_filter = (dist_matrix <= max_distance)
-
         ret = []
         for i in range(dist_matrix.shape[0]):
-            # these arrays are the length of the sqrt(index)
             # replacing the for loop by matrix ops could speed things up
 
-            index = dist_filter[i]
-            scores = dist_matrix[i][index]
-            records = self.records_data[index]
+            scores = dist_matrix[i]
+            records = self.records_data
 
-            if scores.sum() < 0.0001 and len(scores) > 0:
-                # they are all practically the same
-                # we have to do this to prevent infinite recursion
-                # TODO: would love an alternative solution, this is a critical
-                # loop
-                lenScores = len(scores)
-                arg_index = _np.random.choice(lenScores, min(lenScores, k), 
-                                              replace=False)
-            else:
-                arg_index = _np.argsort(scores)[:k]
+            arg_index = _np.argsort(scores)
 
             curr_ret = list(zip(scores[arg_index], records[arg_index]))
 
             ret.append(curr_ret)
 
         return ret
+
+    def remove_near_duplicates(self):
+        """If there are 2 or more records with 0 distance from eachother - 
+        keep only one. 
+        """
+
+        dist_matrix = self._distance(self.matrix)
+
+        keeps = []
+        dupes = set()
+        for row_index in range(dist_matrix.shape[0]):
+            max_dist = dist_matrix[row_index].max()
+            for col_index in range(dist_matrix.shape[0]):
+                if row_index < col_index:
+                    if dist_matrix[row_index, col_index] / max_dist <= 0.001:
+                        dupes.add(col_index)
+            if not row_index in dupes:
+                keeps.append(row_index)
+
+        self.matrix = self.matrix[keeps]
+        self.records = self.records_data[keeps]
+
 
 class CosineDistance(MatrixMetricSearch):
     """A matrix that implements cosine distance search against it.

@@ -17,6 +17,31 @@ from sklearn.feature_extraction import DictVectorizer
 
 class PysparnnTest(unittest.TestCase):
     """End to end tests for pysparnn"""
+    def setUp(self):
+        np.random.seed(1)
+
+    def test_remove_duplicates(self):
+        """Do a quick basic test for index/search functionality"""
+        data = [
+            'hello world',
+            'hello world',
+            'oh hello there',
+            'oh hello there',
+            'oh hello there',
+            'Play it',
+            'Play it again Sam',
+        ]
+
+        features = [dict([(x, 1) for x in f.split()]) for f in data]
+        features = DictVectorizer().fit_transform(features)
+        dist = UnitCosineDistance(features, data)
+        
+        self.assertEqual(dist.matrix.shape[0], 7)
+
+        dist.remove_near_duplicates()
+
+        self.assertEqual(dist.matrix.shape[0], 4)
+
     def test_cosine(self):
         """Do a quick basic test for index/search functionality"""
         data = [
@@ -97,11 +122,11 @@ class PysparnnTest(unittest.TestCase):
         features = csr_matrix(features)
 
         # build the search index!
-        data_to_return = list(range(1000))
+        data_to_return = np.array(list(range(1000)), dtype=int)
 
         # matrix size smaller - this forces the index to have multiple levels
         cluster_index = ci.ClusterIndex(features, data_to_return,
-                                       matrix_size=10)
+                                        matrix_size=10)
 
         ret =  cluster_index.search(features[0:10], k=1, k_clusters=1,
                                     return_distance=False)
@@ -113,11 +138,11 @@ class PysparnnTest(unittest.TestCase):
         features = csr_matrix(features)
 
         # build the search index!
-        data_to_return = list(range(1000))
+        data_to_return = np.array(list(range(1000)), dtype=int)
 
         # matrix size smaller - this forces the index to have multiple levels
         cluster_index = ci.MultiClusterIndex(features, data_to_return,
-                                       matrix_size=10)
+                                             matrix_size=10)
 
         ret =  cluster_index.search(features[0:10], k=1, k_clusters=1,
                                     return_distance=False)
