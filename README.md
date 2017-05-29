@@ -7,7 +7,6 @@ PySparNN benefits:
  * Designed to be efficient on sparse data (memory & cpu).
  * Implemented leveraging existing python libraries (scipy & numpy).
  * Easily extended with other metrics: Manhattan, Euclidian, Jaccard, etc.
- * Max distance thresholds can be set at query time (not index time). I.e. return the k closest items no more than max_distance from the query point.
  * Supports incremental insertion of elements.
 
 If your data is NOT SPARSE - please consider [faiss](https://github.com/facebookresearch/faiss) or [annoy](https://github.com/spotify/annoy). They use similar methods and I am a big fan of both. You should expect better performance on dense vectors from both of those projects.
@@ -89,8 +88,6 @@ This breaks up one O(D) search into two O(sqrt(D)) searches which is much much f
 
 This generalizes to h levels. The runtime becomes:
     O(h * h_root(D))
-
-**Note on min_distance thresholds** - Each document is assigned to the closest candidate cluster. When we set min_distance we will filter out clusters that don't meet that requirement without going into the individual clusters looking for matches. This means that we are likely to miss some good matches along the way since we wont investigate clusters that just miss the cutoff. A (planned) patch for this behavior would be to also search clusters that 'just' miss this cutoff. 
 
 ## Further Information
 http://nlp.stanford.edu/IR-book/html/htmledition/cluster-pruning-1.html
