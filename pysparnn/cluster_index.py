@@ -256,17 +256,23 @@ class ClusterIndex(object):
             ret = []
             nearest = self.root.nearest_search(features)
 
-            for i, nearest_clusters in enumerate(nearest):
+            for search_i, nearest_clusters in enumerate(nearest):
                 curr_ret = []
 
-                for distance, cluster in nearest_clusters[:k_clusters]:
-
-                    cluster_items = cluster.search(features[i], k=k,
+                for cluster_i, distance_cluster in enumerate(nearest_clusters):
+                    distance, cluster = distance_cluster
+                    cluster_items = cluster.search(features[search_i], k=k,
                                                    k_clusters=k_clusters)
 
                     for elements in cluster_items:
                         if len(elements) > 0:
                             curr_ret.extend(elements)
+
+                    # if we have k elements and we have searched at least
+                    # k_clusters then we are done
+                    if len(curr_ret) >= k and cluster_i + 1 >= k_clusters:
+                        break
+
                 ret.append(_k_best(curr_ret, k))
             return ret
 

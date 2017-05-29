@@ -147,3 +147,19 @@ class PysparnnTest(unittest.TestCase):
         ret =  cluster_index.search(features[0:10], k=1, k_clusters=1,
                                     return_distance=False)
         self.assertEqual([[x] for x in data_to_return[:10]], ret)
+
+    def test_large_k(self):
+        """Test multiple level indexes"""
+        features = np.random.binomial(1, 0.01, size=(1000, 20000))
+        features = csr_matrix(features)
+
+        # build the search index!
+        data_to_return = np.array(list(range(1000)), dtype=int)
+
+        # matrix size smaller - this forces the index to have multiple levels
+        cluster_index = ci.MultiClusterIndex(features, data_to_return,
+                                             matrix_size=10)
+
+        ret =  cluster_index.search(features[0], k=100, k_clusters=1,
+                                    return_distance=False)
+        self.assertEqual(100, len(ret[0]))
