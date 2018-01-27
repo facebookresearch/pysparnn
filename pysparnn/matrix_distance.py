@@ -6,14 +6,14 @@
 # of patent rights can be found in the PATENTS file in the same directory.
 """Defines a distance search structure"""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import abc as _abc
+
 import numpy as _np
 import scipy.sparse as _sparse
 import scipy.spatial.distance as _spatial_distance
+
 
 class MatrixMetricSearch(object):
     """A matrix representation out of features."""
@@ -152,7 +152,7 @@ class CosineDistance(MatrixMetricSearch):
         m_c = self.matrix.copy()
         m_c.data **= 2
         self.matrix_root_sum_square = \
-                _np.sqrt(_np.asarray(m_c.sum(axis=1)).reshape(-1))
+            _np.sqrt(_np.asarray(m_c.sum(axis=1)).reshape(-1))
 
     @staticmethod
     def features_to_matrix(features):
@@ -186,12 +186,13 @@ class CosineDistance(MatrixMetricSearch):
         a_c.data **= 2
         a_root_sum_square = _np.asarray(a_c.sum(axis=1)).reshape(-1)
         a_root_sum_square = \
-                a_root_sum_square.reshape(len(a_root_sum_square), 1)
+            a_root_sum_square.reshape(len(a_root_sum_square), 1)
         a_root_sum_square = _np.sqrt(a_root_sum_square)
 
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 
         return 1 - dprod.multiply(magnitude).toarray()
+
 
 class UnitCosineDistance(MatrixMetricSearch):
     """A matrix that implements cosine distance search against it.
@@ -210,7 +211,7 @@ class UnitCosineDistance(MatrixMetricSearch):
     def __init__(self, features, records_data):
         super(UnitCosineDistance, self).__init__(features, records_data)
         self.matrix_root_sum_square = \
-                _np.sqrt(_np.asarray(self.matrix.sum(axis=1)).reshape(-1))
+            _np.sqrt(_np.asarray(self.matrix.sum(axis=1)).reshape(-1))
 
     @staticmethod
     def features_to_matrix(features):
@@ -242,12 +243,13 @@ class UnitCosineDistance(MatrixMetricSearch):
 
         a_root_sum_square = _np.asarray(a_matrix.sum(axis=1)).reshape(-1)
         a_root_sum_square = \
-                a_root_sum_square.reshape(len(a_root_sum_square), 1)
+            a_root_sum_square.reshape(len(a_root_sum_square), 1)
         a_root_sum_square = _np.sqrt(a_root_sum_square)
 
         magnitude = 1.0 / (a_root_sum_square * self.matrix_root_sum_square)
 
         return 1 - dprod.multiply(magnitude).toarray()
+
 
 class SlowEuclideanDistance(MatrixMetricSearch):
     """A matrix that implements euclidean distance search against it.
@@ -286,6 +288,7 @@ class SlowEuclideanDistance(MatrixMetricSearch):
 
         return _spatial_distance.cdist(a_matrix, self.matrix, 'euclidean')
 
+
 class DenseCosineDistance(MatrixMetricSearch):
     """A matrix that implements cosine distance search against it.
 
@@ -300,7 +303,7 @@ class DenseCosineDistance(MatrixMetricSearch):
         super(DenseCosineDistance, self).__init__(features, records_data)
 
         self.matrix_root_sum_square = \
-                _np.sqrt((self.matrix**2).sum(axis=1).reshape(-1))
+            _np.sqrt((self.matrix ** 2).sum(axis=1).reshape(-1))
 
     @staticmethod
     def features_to_matrix(features):
@@ -330,7 +333,7 @@ class DenseCosineDistance(MatrixMetricSearch):
         # what is the implmentation of transpose? can i change the order?
         dprod = self.matrix.dot(a_matrix.transpose()).transpose() * 1.0
 
-        a_root_sum_square = (a_matrix**2).sum(axis=1).reshape(-1)
+        a_root_sum_square = (a_matrix ** 2).sum(axis=1).reshape(-1)
         a_root_sum_square = a_root_sum_square.reshape(len(a_root_sum_square), 1)
         a_root_sum_square = _np.sqrt(a_root_sum_square)
 

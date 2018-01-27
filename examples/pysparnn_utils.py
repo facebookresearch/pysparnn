@@ -5,9 +5,10 @@
 # LICENSE-examples file in the root directory of this source tree.
 import numpy as np
 
+
 # code that will measure query time and recall
 def recall(query, full_set):
-    ret =  []
+    ret = []
     for r_items, t_items in zip(query, full_set):
         result = 0.0
         for r in np.unique(r_items):
