@@ -6,14 +6,15 @@
 # of patent rights can be found in the PATENTS file in the same directory.
 """Defines a cluster pruing search structure to do K-NN Queries"""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import collections as _collections
 import random as _random
+
 import numpy as _np
+
 import pysparnn.matrix_distance
+
 
 def _k_best(tuple_list, k):
     """For a list of tuples [(distance, value), ...] - Get the k-best tuples by
@@ -26,6 +27,7 @@ def _k_best(tuple_list, k):
                        reverse=False)[:k]
 
     return tuple_lst
+
 
 def _filter_unique(tuple_list):
     """For a list of tuples [(distance, value), ...] - filter out duplicate
@@ -111,7 +113,7 @@ class ClusterIndex(object):
 
         self.matrix_size = matrix_size
 
-        num_levels = _np.log(num_records)/_np.log(self.matrix_size)
+        num_levels = _np.log(num_records) / _np.log(self.matrix_size)
 
         if num_levels <= 1.4:
             self.is_terminal = True
@@ -131,7 +133,7 @@ class ClusterIndex(object):
                                  list(_np.arange(clusters_selection.shape[0])))
 
             root.remove_near_duplicates()
-            root = distance_type(root.matrix, 
+            root = distance_type(root.matrix,
                                  list(_np.arange(root.matrix.shape[0])))
 
             rng_step = self.matrix_size
@@ -162,7 +164,6 @@ class ClusterIndex(object):
 
             self.root = distance_type(cluster_keeps, clusters)
 
-
     def insert(self, feature, record):
         """Insert a single record into the index.
 
@@ -184,8 +185,6 @@ class ClusterIndex(object):
             parent_index = cluster_index.parent
 
         cluster_index._reindex(feature, record)
-
-
 
     def _get_child_data(self):
         """Get all of the features and corresponding records represented in the
@@ -229,8 +228,7 @@ class ClusterIndex(object):
             flat_rec.append(record)
 
         self.__init__(self.distance_type.vstack(features), flat_rec, self.distance_type,
-                self.desired_matrix_size, self.parent)
-
+                      self.desired_matrix_size, self.parent)
 
     def _search(self, features, k=1, k_clusters=1):
         """Find the closest item(s) for each feature_list in.
@@ -277,7 +275,7 @@ class ClusterIndex(object):
             return ret
 
     def search(self, features, k=1, k_clusters=1,
-            return_distance=True):
+               return_distance=True):
         """Find the closest item(s) for each feature_list in the index.
 
         Args:
@@ -422,7 +420,6 @@ class MultiClusterIndex(object):
             num_indexes: Number of ClusterIndexes to construct. Improves recall
                 at the cost of memory.
         """
-
 
         self.indexes = []
         for _ in range(num_indexes):
